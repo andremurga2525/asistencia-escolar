@@ -24,10 +24,18 @@
     <!-- Navbar del Padre de Familia -->
     <nav class="navbar navbar-dark bg-jeshua shadow-sm sticky-top">
         <div class="container px-4">
-            <a class="navbar-brand fw-bold d-flex align-items-center" th:href="@{/padre/hijos}">
-                <i class="bi bi-person-heart me-2 fs-4 text-warning"></i>
-                <span th:text="${colegio.nombreColegio}">I.E.P. Internacional Jeshua</span>
-                <span class="badge bg-white text-danger ms-2 px-2 py-1 small rounded-pill">Portal Apoderados</span>
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" th:href="@{/padre/hijos}">
+                <div class="rounded-3 d-flex align-items-center justify-content-center p-1 bg-white shadow-sm" style="min-width: 36px; min-height: 36px;">
+                    <img th:if="${colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl)}" 
+                         th:src="${colegio.logoUrl}" 
+                         alt="Logo" style="max-height: 28px; max-width: 32px; object-fit: contain;">
+                    <i th:unless="${colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl)}" 
+                       class="bi bi-mortarboard-fill text-danger fs-5"></i>
+                </div>
+                <div>
+                    <span th:text="${colegio != null ? colegio.nombreColegio : 'I.E.P. Internacional Jeshua'}">I.E.P. Internacional Jeshua</span>
+                    <span class="badge bg-white text-danger ms-2 px-2 py-1 small rounded-pill">Portal Apoderados</span>
+                </div>
             </a>
             <div class="d-flex align-items-center gap-3">
                 <span class="text-white small">

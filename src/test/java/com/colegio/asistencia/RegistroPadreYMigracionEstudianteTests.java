@@ -7,6 +7,8 @@ import com.colegio.asistencia.repository.ApoderadoRepository;
 import com.colegio.asistencia.repository.EstudianteRepository;
 import com.colegio.asistencia.repository.UsuarioRepository;
 import com.colegio.asistencia.service.EstudianteService;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +44,20 @@ class RegistroPadreYMigracionEstudianteTests {
     private EstudianteRepository estudianteRepository;
 
     @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
     private EstudianteService estudianteService;
+
+    @BeforeEach
+    void limpiarDatosPrueba() {
+        jdbcTemplate.execute("DELETE FROM apoderados_estudiantes WHERE estudiante_id IN (SELECT id FROM estudiantes WHERE dni IN ('71990001', '71990002'))");
+        jdbcTemplate.execute("DELETE FROM registros_asistencia WHERE estudiante_id IN (SELECT id FROM estudiantes WHERE dni IN ('71990001', '71990002'))");
+        jdbcTemplate.execute("DELETE FROM matriculas WHERE estudiante_id IN (SELECT id FROM estudiantes WHERE dni IN ('71990001', '71990002'))");
+        jdbcTemplate.execute("DELETE FROM estudiantes WHERE dni IN ('71990001', '71990002')");
+        jdbcTemplate.execute("DELETE FROM apoderados WHERE dni = '10998877'");
+        jdbcTemplate.execute("DELETE FROM usuarios WHERE username = '10998877'");
+    }
 
     @Test
     @DisplayName("El formulario de registro de padres debe ser público y accesible sin autenticación")

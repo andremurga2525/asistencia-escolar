@@ -75,12 +75,24 @@
     <!-- Navbar Auxiliar -->
     <nav class="navbar navbar-dark bg-jeshua shadow-sm sticky-top">
         <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="/auxiliar/escaner">
-                <i class="bi bi-qr-code-scan me-2 fs-4 text-warning"></i>
-                <span th:text="${colegio.nombreColegio}">I.E.P. Internacional Jeshua</span>
-                <span class="badge bg-warning text-dark ms-2 px-2 py-1 small rounded-pill">Módulo Auxiliar - Puerta</span>
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" th:href="@{/auxiliar/escaner}">
+                <div class="rounded-3 d-flex align-items-center justify-content-center p-1 bg-white shadow-sm" style="min-width: 36px; min-height: 36px;">
+                    <img th:if="${colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl)}" 
+                         th:src="${colegio.logoUrl}" 
+                         alt="Logo" style="max-height: 28px; max-width: 32px; object-fit: contain;">
+                    <i th:unless="${colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl)}" 
+                       class="bi bi-mortarboard-fill text-danger fs-5"></i>
+                </div>
+                <div>
+                    <span th:text="${colegio != null ? colegio.nombreColegio : 'I.E.P. Internacional Jeshua'}">I.E.P. Internacional Jeshua</span>
+                    <span class="badge bg-warning text-dark ms-2 px-2 py-1 small rounded-pill">Módulo Auxiliar - Puerta</span>
+                </div>
             </a>
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <!-- Botón para regresar al panel de administración si el usuario es Admin -->
+                <a th:href="@{/admin/dashboard}" class="btn btn-warning btn-sm fw-bold rounded-pill px-3 shadow-sm d-flex align-items-center" sec:authorize="hasRole('ADMIN')">
+                    <i class="bi bi-arrow-left-circle-fill me-1 fs-6"></i> Volver a Panel Admin
+                </a>
                 <span class="text-white small">
                     <i class="bi bi-person-badge-fill me-1"></i> <strong sec:authentication="name">auxiliar</strong>
                 </span>
@@ -94,6 +106,20 @@
     </nav>
 
     <div class="container-fluid px-4 py-4">
+
+        <!-- Banner de navegación si quien ingresa es Administrador -->
+        <div sec:authorize="hasRole('ADMIN')" class="alert alert-warning border-0 shadow-sm py-2 px-3 rounded-4 d-flex justify-content-between align-items-center mb-4" style="background-color: #fef3c7; border-left: 5px solid #d97706 !important;">
+            <div class="d-flex align-items-center gap-2 text-dark">
+                <i class="bi bi-shield-lock-fill fs-4 text-warning"></i>
+                <div>
+                    <strong class="text-dark">Modo Administrador Activo:</strong> Estás probando el Lector de QR en Vivo.
+                    <span class="text-muted d-block small">Puedes registrar asistencias o volver al panel de control directivo en cualquier momento sin necesidad de cerrar sesión.</span>
+                </div>
+            </div>
+            <a th:href="@{/admin/dashboard}" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm text-nowrap">
+                <i class="bi bi-arrow-left-circle-fill me-1"></i> Volver al Panel Admin
+            </a>
+        </div>
 
         <div class="row g-4">
             

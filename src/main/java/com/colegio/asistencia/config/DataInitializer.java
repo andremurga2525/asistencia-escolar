@@ -109,9 +109,9 @@ public class DataInitializer {
             // 7. Grados y Secciones
             NivelEducativo nivelPrimaria = nivelRepository.findByCodigo(EnumNivel.PRIMARIA).orElse(null);
             NivelEducativo nivelSecundaria = nivelRepository.findByCodigo(EnumNivel.SECUNDARIA).orElse(null);
+            NivelEducativo nivelInicial = nivelRepository.findByCodigo(EnumNivel.INICIAL).orElse(null);
 
             if (gradoRepository.count() == 0 && nivelPrimaria != null && nivelSecundaria != null) {
-                NivelEducativo nivelInicial = nivelRepository.findByCodigo(EnumNivel.INICIAL).orElse(null);
                 if (nivelInicial != null) {
                     crearGradoYSeccion(gradoRepository, seccionRepository, "Inicial 3 Anos", 3, nivelInicial, "A");
                     crearGradoYSeccion(gradoRepository, seccionRepository, "Inicial 4 Anos", 4, nivelInicial, "A");
@@ -128,7 +128,6 @@ public class DataInitializer {
             // 8. Horarios Escolares
             Turno turnoManana = turnoRepository.findByCodigo(EnumTurno.MANANA).orElse(null);
             if (horarioRepository.count() == 0 && turnoManana != null && nivelPrimaria != null && nivelSecundaria != null) {
-                NivelEducativo nivelInicial = nivelRepository.findByCodigo(EnumNivel.INICIAL).orElse(null);
                 if (nivelInicial != null) {
                     horarioRepository.save(new HorarioEscolar("Horario Inicial Manana", nivelInicial, turnoManana,
                             LocalTime.of(7, 30), LocalTime.of(8, 0), 10, LocalTime.of(8, 30), LocalTime.of(12, 30), LocalTime.of(13, 0)));
@@ -139,141 +138,124 @@ public class DataInitializer {
                         LocalTime.of(6, 45), LocalTime.of(7, 15), 10, LocalTime.of(7, 45), LocalTime.of(13, 45), LocalTime.of(14, 15)));
             }
 
-            // 9. Estudiantes, Apoderados y Matriculas Iniciales
-            if (estudianteRepository.count() == 0 && nivelPrimaria != null && turnoManana != null) {
-                log.info("Creando estudiantes, apoderados y matriculas 2026...");
+            // 9. Estudiantes, Apoderados y Matriculas
+            log.info("Asegurando datos de prueba para padres, estudiantes e inasistencias...");
 
-                // Estudiante 1 (Lucas)
-                Estudiante lucas = new Estudiante("71234567", "Lucas", "Quispe Mendoza", "M");
-                lucas.setDireccion("Calle San Martin 145, Tuman");
-                lucas = estudianteRepository.save(lucas);
+            // Apoderado Principal: Juan Carlos Quispe Flores (DNI: 10234567 / clave: padre123)
+            String dniPadre = "10234567";
+            Usuario usuarioPadre = usuarioRepository.findByUsername(dniPadre).orElseGet(() -> {
+                Usuario u = new Usuario(dniPadre, passwordEncoder.encode("padre123"), "Juan Quispe Flores (Padre)", "padre.quispe@gmail.com");
+                u.setTelefono("+51 974 555 666");
+                if (rolPadre != null) u.agregarRol(rolPadre);
+                return usuarioRepository.save(u);
+            });
 
-                // Estudiante 2 (Mateo)
-                Estudiante mateo = new Estudiante("71234568", "Mateo", "Quispe Mendoza", "M");
-                mateo.setDireccion("Calle San Martin 145, Tuman");
-                mateo = estudianteRepository.save(mateo);
+            Apoderado padreQuispe = apoderadoRepository.findByDni(dniPadre).orElseGet(() -> {
+                Apoderado a = new Apoderado(dniPadre, "Juan Carlos", "Quispe Flores", "PADRE", "+51 974 555 666");
+                a.setDireccion("Calle San Martin 145, Tuman");
+                a.setUsuario(usuarioPadre);
+                return apoderadoRepository.save(a);
+            });
 
-                // Estudiante 3 (Valeria)
-                Estudiante valeria = new Estudiante("71234569", "Valeria", "Torres Silva", "F");
-                valeria.setDireccion("Av. Ramon Castilla 320, Tuman");
-                valeria = estudianteRepository.save(valeria);
+            // Hijos para Juan Quispe (Lucas, Mateo, Thiago, Camila, Joaquin, Rodrigo)
+            Estudiante lucas = asegurarEstudiante(estudianteRepository, "71234567", "Lucas", "Quispe Mendoza", "M", "Calle San Martin 145, Tuman");
+            Estudiante mateo = asegurarEstudiante(estudianteRepository, "71234568", "Mateo", "Quispe Mendoza", "M", "Calle San Martin 145, Tuman");
+            Estudiante thiago = asegurarEstudiante(estudianteRepository, "71234571", "Thiago", "Quispe Mendoza", "M", "Calle San Martin 145, Tuman");
+            Estudiante camila = asegurarEstudiante(estudianteRepository, "71234572", "Camila", "Quispe Mendoza", "F", "Calle San Martin 145, Tuman");
+            Estudiante joaquin = asegurarEstudiante(estudianteRepository, "71234573", "Joaquin", "Quispe Mendoza", "M", "Calle San Martin 145, Tuman");
+            Estudiante rodrigo = asegurarEstudiante(estudianteRepository, "71234574", "Rodrigo", "Quispe Mendoza", "M", "Calle San Martin 145, Tuman");
 
-                // Apoderado 1: Juan Quispe Flores (DNI: 10234567 / padre123)
-                String dniPadre = "10234567";
-                Usuario usuarioPadre = null;
-                if (!usuarioRepository.existsByUsername(dniPadre) && rolPadre != null) {
-                    usuarioPadre = new Usuario(dniPadre, passwordEncoder.encode("padre123"), "Juan Quispe Flores (Padre)", "padre.quispe@gmail.com");
-                    usuarioPadre.setTelefono("+51 974 555 666");
-                    usuarioPadre.agregarRol(rolPadre);
-                    usuarioPadre = usuarioRepository.save(usuarioPadre);
-                } else {
-                    usuarioPadre = usuarioRepository.findByUsername(dniPadre).orElse(null);
-                }
+            padreQuispe.agregarEstudiante(lucas);
+            padreQuispe.agregarEstudiante(mateo);
+            padreQuispe.agregarEstudiante(thiago);
+            padreQuispe.agregarEstudiante(camila);
+            padreQuispe.agregarEstudiante(joaquin);
+            padreQuispe.agregarEstudiante(rodrigo);
+            padreQuispe = apoderadoRepository.save(padreQuispe);
 
-                Apoderado padreQuispe = new Apoderado(dniPadre, "Juan Carlos", "Quispe Flores", "PADRE", "+51 974 555 666");
-                padreQuispe.setDireccion("Calle San Martin 145, Tuman");
-                padreQuispe.setUsuario(usuarioPadre);
-                padreQuispe.agregarEstudiante(lucas);
-                padreQuispe.agregarEstudiante(mateo);
-                apoderadoRepository.save(padreQuispe);
+            // Obtener Grados y Secciones de Primaria
+            Grado g1Primaria = gradoRepository.findByNombreAndNivelCodigo("1o Grado de Primaria", EnumNivel.PRIMARIA).orElse(null);
+            Grado g2Primaria = gradoRepository.findByNombreAndNivelCodigo("2o Grado de Primaria", EnumNivel.PRIMARIA).orElse(null);
+            Grado g3Primaria = gradoRepository.findByNombreAndNivelCodigo("3o Grado de Primaria", EnumNivel.PRIMARIA).orElse(null);
+            Grado g4Primaria = gradoRepository.findByNombreAndNivelCodigo("4o Grado de Primaria", EnumNivel.PRIMARIA).orElse(null);
+            Grado g5Primaria = gradoRepository.findByNombreAndNivelCodigo("5o Grado de Primaria", EnumNivel.PRIMARIA).orElse(null);
+            Grado g6Primaria = gradoRepository.findByNombreAndNivelCodigo("6o Grado de Primaria", EnumNivel.PRIMARIA).orElse(null);
 
-                // Matriculas en Grados y Secciones
-                Grado grado1Primaria = gradoRepository.findByNombreAndNivelCodigo("1o Grado de Primaria", EnumNivel.PRIMARIA).orElse(null);
-                Grado grado3Primaria = gradoRepository.findByNombreAndNivelCodigo("3o Grado de Primaria", EnumNivel.PRIMARIA).orElse(null);
-                Grado grado1Secundaria = gradoRepository.findByNombreAndNivelCodigo("1o Ano de Secundaria", EnumNivel.SECUNDARIA).orElse(null);
+            Seccion sec1A = g1Primaria != null ? seccionRepository.findByGradoId(g1Primaria.getId()).stream().findFirst().orElse(null) : null;
+            Seccion sec2A = g2Primaria != null ? seccionRepository.findByGradoId(g2Primaria.getId()).stream().findFirst().orElse(null) : null;
+            Seccion sec3A = g3Primaria != null ? seccionRepository.findByGradoId(g3Primaria.getId()).stream().findFirst().orElse(null) : null;
+            Seccion sec4A = g4Primaria != null ? seccionRepository.findByGradoId(g4Primaria.getId()).stream().findFirst().orElse(null) : null;
+            Seccion sec5A = g5Primaria != null ? seccionRepository.findByGradoId(g5Primaria.getId()).stream().findFirst().orElse(null) : null;
+            Seccion sec6A = g6Primaria != null ? seccionRepository.findByGradoId(g6Primaria.getId()).stream().findFirst().orElse(null) : null;
 
-                Seccion seccion1A = grado1Primaria != null ? seccionRepository.findByGradoId(grado1Primaria.getId()).stream().findFirst().orElse(null) : null;
-                Seccion seccion3A = grado3Primaria != null ? seccionRepository.findByGradoId(grado3Primaria.getId()).stream().findFirst().orElse(null) : null;
-                Seccion seccionSec1A = grado1Secundaria != null ? seccionRepository.findByGradoId(grado1Secundaria.getId()).stream().findFirst().orElse(null) : null;
+            Matricula matLucas = asegurarMatricula(matriculaRepository, "MAT-2026-001", lucas, anio2026, sec1A, turnoManana);
+            Matricula matMateo = asegurarMatricula(matriculaRepository, "MAT-2026-002", mateo, anio2026, sec3A, turnoManana);
+            Matricula matThiago = asegurarMatricula(matriculaRepository, "MAT-2026-005", thiago, anio2026, sec5A, turnoManana);
+            Matricula matCamila = asegurarMatricula(matriculaRepository, "MAT-2026-006", camila, anio2026, sec2A, turnoManana);
+            Matricula matJoaquin = asegurarMatricula(matriculaRepository, "MAT-2026-007", joaquin, anio2026, sec4A, turnoManana);
+            Matricula matRodrigo = asegurarMatricula(matriculaRepository, "MAT-2026-008", rodrigo, anio2026, sec6A, turnoManana);
 
-                if (seccion1A != null) {
-                    matriculaRepository.save(new Matricula("MAT-2026-001", lucas, anio2026, seccion1A, turnoManana));
-                }
-                if (seccion3A != null) {
-                    matriculaRepository.save(new Matricula("MAT-2026-002", mateo, anio2026, seccion3A, turnoManana));
-                }
-                if (seccionSec1A != null) {
-                    matriculaRepository.save(new Matricula("MAT-2026-003", valeria, anio2026, seccionSec1A, turnoManana));
-                }
-            }
+            // Apoderada 2: Maria Elena Silva Castro (DNI: 10234568 / padre123) -> Madre de Valeria Torres
+            Estudiante valeria = asegurarEstudiante(estudianteRepository, "71234569", "Valeria", "Torres Silva", "F", "Av. Ramon Castilla 320, Tuman");
+            Grado g1Secundaria = gradoRepository.findByNombreAndNivelCodigo("1o Ano de Secundaria", EnumNivel.SECUNDARIA).orElse(null);
+            Seccion secSec1A = g1Secundaria != null ? seccionRepository.findByGradoId(g1Secundaria.getId()).stream().findFirst().orElse(null) : null;
+            Matricula matValeria = asegurarMatricula(matriculaRepository, "MAT-2026-003", valeria, anio2026, secSec1A, turnoManana);
 
-            // 9.1 Asegurar que existan cuentas de acceso para múltiples padres de prueba:
-            // Apoderada 2: María Elena Silva Castro (DNI: 10234568 / padre123) -> Madre de Valeria Torres
-            if (apoderadoRepository.findByDni("10234568").isEmpty()) {
-                String dniMadre = "10234568";
-                Usuario userMadre = usuarioRepository.findByUsername(dniMadre).orElseGet(() -> {
-                    Usuario u = new Usuario(dniMadre, passwordEncoder.encode("padre123"), "Maria Elena Silva Castro (Madre)", "maria.silva@gmail.com");
-                    u.setTelefono("+51 974 888 999");
-                    u.agregarRol(rolPadre);
-                    return usuarioRepository.save(u);
-                });
-                Apoderado madreSilva = new Apoderado(dniMadre, "Maria Elena", "Silva Castro", "MADRE", "+51 974 888 999");
-                madreSilva.setDireccion("Av. Ramon Castilla 320, Tuman");
-                madreSilva.setUsuario(userMadre);
-                estudianteRepository.findByDni("71234569").ifPresent(madreSilva::agregarEstudiante);
-                apoderadoRepository.save(madreSilva);
-                log.info("Apoderada Maria Elena Silva creada (DNI: 10234568 / padre123) vinculada a Valeria Torres.");
-            }
+            String dniMadre = "10234568";
+            Usuario userMadre = usuarioRepository.findByUsername(dniMadre).orElseGet(() -> {
+                Usuario u = new Usuario(dniMadre, passwordEncoder.encode("padre123"), "Maria Elena Silva Castro (Madre)", "maria.silva@gmail.com");
+                u.setTelefono("+51 974 888 999");
+                if (rolPadre != null) u.agregarRol(rolPadre);
+                return usuarioRepository.save(u);
+            });
+            Apoderado madreSilva = apoderadoRepository.findByDni(dniMadre).orElseGet(() -> {
+                Apoderado m = new Apoderado(dniMadre, "Maria Elena", "Silva Castro", "MADRE", "+51 974 888 999");
+                m.setDireccion("Av. Ramon Castilla 320, Tuman");
+                m.setUsuario(userMadre);
+                return apoderadoRepository.save(m);
+            });
+            madreSilva.agregarEstudiante(valeria);
+            apoderadoRepository.save(madreSilva);
 
-            // Apoderado 3: Roberto Carlos Paredes Ruiz (DNI: 10234569 / padre123) -> Padre de Sofia Paredes (Inicial 5 Anos)
-            if (estudianteRepository.findByDni("71234570").isEmpty()) {
-                Estudiante sofia = new Estudiante("71234570", "Sofia Nicole", "Paredes Diaz", "F");
-                sofia.setDireccion("Jr. Comercio 512, Tuman");
-                sofia = estudianteRepository.save(sofia);
+            // Apoderado 3: Roberto Carlos Paredes Ruiz (DNI: 10234569 / padre123) -> Padre de Sofia Paredes
+            Estudiante sofia = asegurarEstudiante(estudianteRepository, "71234570", "Sofia Nicole", "Paredes Diaz", "F", "Jr. Comercio 512, Tuman");
+            Grado gInicial5 = gradoRepository.findByNombreAndNivelCodigo("Inicial 5 Anos", EnumNivel.INICIAL).orElse(null);
+            Seccion secIni5A = gInicial5 != null ? seccionRepository.findByGradoId(gInicial5.getId()).stream().findFirst().orElse(null) : null;
+            Matricula matSofia = asegurarMatricula(matriculaRepository, "MAT-2026-004", sofia, anio2026, secIni5A, turnoManana);
 
-                Grado gradoInicial5 = gradoRepository.findByNombreAndNivelCodigo("Inicial 5 Anos", EnumNivel.INICIAL).orElse(null);
-                Seccion seccionInicial5A = gradoInicial5 != null ? seccionRepository.findByGradoId(gradoInicial5.getId()).stream().findFirst().orElse(null) : null;
-                if (seccionInicial5A != null && anio2026 != null && turnoManana != null) {
-                    matriculaRepository.save(new Matricula("MAT-2026-004", sofia, anio2026, seccionInicial5A, turnoManana));
-                }
+            String dniParedes = "10234569";
+            Usuario userParedes = usuarioRepository.findByUsername(dniParedes).orElseGet(() -> {
+                Usuario u = new Usuario(dniParedes, passwordEncoder.encode("padre123"), "Roberto Carlos Paredes Ruiz (Padre)", "roberto.paredes@gmail.com");
+                u.setTelefono("+51 974 777 888");
+                if (rolPadre != null) u.agregarRol(rolPadre);
+                return usuarioRepository.save(u);
+            });
+            Apoderado padreParedes = apoderadoRepository.findByDni(dniParedes).orElseGet(() -> {
+                Apoderado p = new Apoderado(dniParedes, "Roberto Carlos", "Paredes Ruiz", "PADRE", "+51 974 777 888");
+                p.setDireccion("Jr. Comercio 512, Tuman");
+                p.setUsuario(userParedes);
+                return apoderadoRepository.save(p);
+            });
+            padreParedes.agregarEstudiante(sofia);
+            apoderadoRepository.save(padreParedes);
 
-                String dniParedes = "10234569";
-                Usuario userParedes = usuarioRepository.findByUsername(dniParedes).orElseGet(() -> {
-                    Usuario u = new Usuario(dniParedes, passwordEncoder.encode("padre123"), "Roberto Carlos Paredes Ruiz (Padre)", "roberto.paredes@gmail.com");
-                    u.setTelefono("+51 974 777 888");
-                    u.agregarRol(rolPadre);
-                    return usuarioRepository.save(u);
-                });
-                Apoderado padreParedes = new Apoderado(dniParedes, "Roberto Carlos", "Paredes Ruiz", "PADRE", "+51 974 777 888");
-                padreParedes.setDireccion("Jr. Comercio 512, Tuman");
-                padreParedes.setUsuario(userParedes);
-                padreParedes.agregarEstudiante(sofia);
-                apoderadoRepository.save(padreParedes);
-                log.info("Apoderado Roberto Paredes creado (DNI: 10234569 / padre123) vinculado a Sofia Paredes.");
-            }
-
-            // 10. Registros de Asistencia y Justificaciones para HOY y AYER
+            // 10. Registros de Asistencia: HOY (Estadisticas de Dashboard)
             LocalDate hoy = LocalDate.now();
-            LocalDate ayer = hoy.minusDays(1);
-
-            Estudiante lucas = estudianteRepository.findByDni("71234567").orElse(null);
-            Estudiante mateo = estudianteRepository.findByDni("71234568").orElse(null);
-            Estudiante valeria = estudianteRepository.findByDni("71234569").orElse(null);
-            Apoderado padreQuispe = apoderadoRepository.findByDni("10234567").orElse(null);
-
-            Matricula matLucas = lucas != null ? matriculaRepository.findByEstudianteDniAndAnioEscolarActivoTrue("71234567").orElse(null) : null;
-            Matricula matMateo = mateo != null ? matriculaRepository.findByEstudianteDniAndAnioEscolarActivoTrue("71234568").orElse(null) : null;
-            Matricula matValeria = valeria != null ? matriculaRepository.findByEstudianteDniAndAnioEscolarActivoTrue("71234569").orElse(null) : null;
-
             if (lucas != null && matLucas != null && asistenciaRepository.findByEstudianteIdAndFecha(lucas.getId(), hoy).isEmpty()) {
-                // Lucas: Hoy PUNTUAL (07:25)
                 asistenciaRepository.save(new RegistroAsistencia(lucas, anio2026, matLucas, hoy, LocalTime.of(7, 25), EstadoPuntualidad.PUNTUAL, auxiliarUser));
             }
-
             if (valeria != null && matValeria != null && asistenciaRepository.findByEstudianteIdAndFecha(valeria.getId(), hoy).isEmpty()) {
-                // Valeria: Hoy TARDANZA (07:35)
                 RegistroAsistencia regValeria = new RegistroAsistencia(valeria, anio2026, matValeria, hoy, LocalTime.of(7, 35), EstadoPuntualidad.TARDANZA, auxiliarUser);
                 regValeria.setMinutosTardanza(20);
                 asistenciaRepository.save(regValeria);
             }
 
-            if (mateo != null && matMateo != null && padreQuispe != null && asistenciaRepository.findByEstudianteIdAndFecha(mateo.getId(), ayer).isEmpty()) {
-                // Mateo: Ayer INASISTENCIA (Dentro del plazo de 48 horas)
-                RegistroAsistencia inasistenciaMateo = new RegistroAsistencia(mateo, anio2026, matMateo, ayer, null, EstadoPuntualidad.INASISTENCIA, auxiliarUser);
-                inasistenciaMateo.setObservaciones("No se registro entrada en la puerta");
-                inasistenciaMateo = asistenciaRepository.save(inasistenciaMateo);
+            // 11. Registros de Inasistencia dentro del plazo legal de 48h (Ayer)
+            LocalDate ayer = hoy.minusDays(1);
 
-                // Justificacion enviada por el padre dentro del plazo de 48 horas
+            // Mateo: Inasistencia Ayer CON justificacion enviada (Ejemplo de solicitud en revision)
+            RegistroAsistencia inasistenciaMateo = asegurarInasistencia(asistenciaRepository, mateo, anio2026, matMateo, ayer, auxiliarUser);
+            if (inasistenciaMateo != null && justificacionRepository.findByRegistroAsistenciaId(inasistenciaMateo.getId()).isEmpty()) {
                 JustificacionInasistencia justificacion = new JustificacionInasistencia(
                         inasistenciaMateo,
                         padreQuispe,
@@ -281,9 +263,80 @@ public class DataInitializer {
                         "constancia_medica_mateo.pdf"
                 );
                 justificacionRepository.save(justificacion);
-                log.info("Justificacion de inasistencia para Mateo registrada dentro del plazo de 48h.");
             }
+
+            // 5 Alumnos de Juan Quispe con INASISTENCIA SIN JUSTIFICAR (Dentro de 48h)
+            // Listos para que el usuario entre como padre (10234567 / padre123) y pruebe el boton "Justificar Falta (48h)"
+            RegistroAsistencia asisLucas = asegurarInasistencia(asistenciaRepository, lucas, anio2026, matLucas, ayer, auxiliarUser);
+            limpiarJustificacion(justificacionRepository, asisLucas);
+
+            RegistroAsistencia asisThiago = asegurarInasistencia(asistenciaRepository, thiago, anio2026, matThiago, ayer, auxiliarUser);
+            limpiarJustificacion(justificacionRepository, asisThiago);
+
+            RegistroAsistencia asisCamila = asegurarInasistencia(asistenciaRepository, camila, anio2026, matCamila, ayer, auxiliarUser);
+            limpiarJustificacion(justificacionRepository, asisCamila);
+
+            RegistroAsistencia asisJoaquin = asegurarInasistencia(asistenciaRepository, joaquin, anio2026, matJoaquin, ayer, auxiliarUser);
+            limpiarJustificacion(justificacionRepository, asisJoaquin);
+
+            RegistroAsistencia asisRodrigo = asegurarInasistencia(asistenciaRepository, rodrigo, anio2026, matRodrigo, ayer, auxiliarUser);
+            limpiarJustificacion(justificacionRepository, asisRodrigo);
+
+            // Inasistencias adicionales para otros apoderados
+            RegistroAsistencia asisValeriaAyer = asegurarInasistencia(asistenciaRepository, valeria, anio2026, matValeria, ayer, auxiliarUser);
+            limpiarJustificacion(justificacionRepository, asisValeriaAyer);
+
+            RegistroAsistencia asisSofiaAyer = asegurarInasistencia(asistenciaRepository, sofia, anio2026, matSofia, ayer, auxiliarUser);
+            limpiarJustificacion(justificacionRepository, asisSofiaAyer);
+
+            log.info("5 inasistencias listas dentro del plazo legal de 48 horas para pruebas de justificacion con el apoderado 10234567.");
         };
+    }
+
+    private Estudiante asegurarEstudiante(EstudianteRepository repo, String dni, String nombres, String apellidos, String genero, String direccion) {
+        return repo.findByDni(dni).orElseGet(() -> {
+            Estudiante e = new Estudiante(dni, nombres, apellidos, genero);
+            e.setDireccion(direccion);
+            return repo.save(e);
+        });
+    }
+
+    private Matricula asegurarMatricula(MatriculaRepository matRepo, String codigo, Estudiante est, AnioEscolar anio, Seccion seccion, Turno turno) {
+        if (est == null) return null;
+        return matRepo.findByEstudianteDniAndAnioEscolarActivoTrue(est.getDni()).orElseGet(() -> {
+            if (seccion != null && anio != null && turno != null) {
+                return matRepo.save(new Matricula(codigo, est, anio, seccion, turno));
+            }
+            return null;
+        });
+    }
+
+    private RegistroAsistencia asegurarInasistencia(
+            RegistroAsistenciaRepository asisRepo,
+            Estudiante est,
+            AnioEscolar anio,
+            Matricula mat,
+            LocalDate fecha,
+            Usuario auxiliarUser) {
+        if (est == null || mat == null) return null;
+        RegistroAsistencia asis = asisRepo.findByEstudianteIdAndFecha(est.getId(), fecha).orElse(null);
+        if (asis == null) {
+            asis = new RegistroAsistencia(est, anio, mat, fecha, null, EstadoPuntualidad.INASISTENCIA, auxiliarUser);
+            asis.setObservaciones("Inasistencia registrada en control de puerta (sin marcar)");
+            asis = asisRepo.save(asis);
+        } else {
+            asis.setEstado(EstadoPuntualidad.INASISTENCIA);
+            asis.setHoraEntrada(null);
+            asis.setObservaciones("Inasistencia habilitada para prueba de justificacion (48h)");
+            asis = asisRepo.save(asis);
+        }
+        return asis;
+    }
+
+    private void limpiarJustificacion(JustificacionInasistenciaRepository justRepo, RegistroAsistencia asis) {
+        if (asis != null && asis.getId() != null) {
+            justRepo.findByRegistroAsistenciaId(asis.getId()).ifPresent(justRepo::delete);
+        }
     }
 
     private void crearGradoYSeccion(GradoRepository gradoRepo, SeccionRepository seccionRepo,
