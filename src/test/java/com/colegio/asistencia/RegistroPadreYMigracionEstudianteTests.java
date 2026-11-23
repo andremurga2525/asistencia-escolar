@@ -51,11 +51,13 @@ class RegistroPadreYMigracionEstudianteTests {
 
     @BeforeEach
     void limpiarDatosPrueba() {
+        jdbcTemplate.execute("DELETE FROM apoderados_estudiantes WHERE apoderado_id IN (SELECT id FROM apoderados WHERE dni = '10998877')");
         jdbcTemplate.execute("DELETE FROM apoderados_estudiantes WHERE estudiante_id IN (SELECT id FROM estudiantes WHERE dni IN ('71990001', '71990002'))");
         jdbcTemplate.execute("DELETE FROM registros_asistencia WHERE estudiante_id IN (SELECT id FROM estudiantes WHERE dni IN ('71990001', '71990002'))");
         jdbcTemplate.execute("DELETE FROM matriculas WHERE estudiante_id IN (SELECT id FROM estudiantes WHERE dni IN ('71990001', '71990002'))");
         jdbcTemplate.execute("DELETE FROM estudiantes WHERE dni IN ('71990001', '71990002')");
         jdbcTemplate.execute("DELETE FROM apoderados WHERE dni = '10998877'");
+        jdbcTemplate.execute("DELETE FROM usuarios_roles WHERE usuario_id IN (SELECT id FROM usuarios WHERE username = '10998877')");
         jdbcTemplate.execute("DELETE FROM usuarios WHERE username = '10998877'");
     }
 

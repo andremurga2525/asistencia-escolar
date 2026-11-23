@@ -7,6 +7,13 @@ spring:
   application:
     name: asistencia-escolar
 
+  # Configuración de subida de archivos (fotos desde celular y evidencias PDF)
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 30MB
+      enabled: true
+
   # Motor de plantillas Thymeleaf
   thymeleaf:
     cache: false

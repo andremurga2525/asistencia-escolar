@@ -72,33 +72,35 @@
 </head>
 <body class="bg-light">
 
-    <!-- Navbar Auxiliar -->
-    <nav class="navbar navbar-dark bg-jeshua shadow-sm sticky-top">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" th:href="@{/auxiliar/escaner}">
-                <div class="rounded-3 d-flex align-items-center justify-content-center p-1 bg-white shadow-sm" style="min-width: 36px; min-height: 36px;">
+    <!-- Navbar Auxiliar (Optimizado para móvil y laptop) -->
+    <nav class="navbar navbar-dark bg-jeshua shadow-sm sticky-top py-2">
+        <div class="container-fluid px-3 px-sm-4 d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2 m-0" th:href="@{/auxiliar/escaner}">
+                <div class="rounded-3 d-flex align-items-center justify-content-center p-1 bg-white shadow-sm flex-shrink-0" style="width: 36px; height: 36px;">
                     <img th:if="${colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl)}" 
                          th:src="${colegio.logoUrl}" 
-                         alt="Logo" style="max-height: 28px; max-width: 32px; object-fit: contain;">
+                         alt="Logo" style="max-height: 28px; max-width: 30px; object-fit: contain;">
                     <i th:unless="${colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl)}" 
                        class="bi bi-mortarboard-fill text-danger fs-5"></i>
                 </div>
-                <div>
-                    <span th:text="${colegio != null ? colegio.nombreColegio : 'I.E.P. Internacional Jeshua'}">I.E.P. Internacional Jeshua</span>
-                    <span class="badge bg-warning text-dark ms-2 px-2 py-1 small rounded-pill">Módulo Auxiliar - Puerta</span>
+                <div class="lh-1 text-truncate" style="max-width: 170px;">
+                    <span class="d-none d-sm-inline fs-6 text-white" th:text="${colegio != null ? colegio.nombreColegio : 'I.E.P. Internacional Jeshua'}">I.E.P. Internacional Jeshua</span>
+                    <span class="d-inline d-sm-none fs-6 fw-bold text-white">I.E.P. Jeshua</span>
+                    <span class="badge bg-warning text-dark ms-1 small rounded-pill d-none d-md-inline" style="font-size: 0.65rem;">Módulo Puerta</span>
                 </div>
             </a>
             <div class="d-flex align-items-center gap-2">
-                <!-- Botón para regresar al panel de administración si el usuario es Admin -->
-                <a th:href="@{/admin/dashboard}" class="btn btn-warning btn-sm fw-bold rounded-pill px-3 shadow-sm d-flex align-items-center" sec:authorize="hasRole('ADMIN')">
-                    <i class="bi bi-arrow-left-circle-fill me-1 fs-6"></i> Volver a Panel Admin
+                <!-- Botón Volver al Panel Admin (visible si tiene rol ADMIN) -->
+                <a th:href="@{/admin/dashboard}" class="btn btn-warning btn-sm fw-bold rounded-pill px-2 px-sm-3 shadow-sm d-flex align-items-center" sec:authorize="hasRole('ADMIN')">
+                    <i class="bi bi-arrow-left-circle-fill fs-6"></i>
+                    <span class="d-none d-sm-inline ms-1">Volver a Panel Admin</span>
                 </a>
-                <span class="text-white small">
+                <span class="text-white small d-none d-sm-inline">
                     <i class="bi bi-person-badge-fill me-1"></i> <strong sec:authentication="name">auxiliar</strong>
                 </span>
                 <form th:action="@{/logout}" method="post" class="m-0">
-                    <button type="submit" class="btn btn-outline-light btn-sm rounded-pill px-3">
-                        <i class="bi bi-box-arrow-right me-1"></i> Salir
+                    <button type="submit" class="btn btn-outline-light btn-sm rounded-pill px-2 px-sm-3" title="Cerrar Sesión">
+                        <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline ms-1">Salir</span>
                     </button>
                 </form>
             </div>
