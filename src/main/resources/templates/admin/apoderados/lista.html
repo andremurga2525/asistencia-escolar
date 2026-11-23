@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Padrón de Apoderados - I.E.P. Internacional Jeshua</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        .bg-jeshua { background-color: #b91c1c !important; }
+        .text-jeshua { color: #b91c1c !important; }
+        .btn-jeshua { background-color: #b91c1c; color: white; }
+        .btn-jeshua:hover { background-color: #991b1b; color: white; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Navbar compartido -->
+    <div th:replace="~{fragments/admin_nav :: navbar('apoderados')}"></div>
+
+    <div class="container py-4">
+
+        <!-- Mensajes Flash -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Encabezado y Acciones -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-7">
+                        <h4 class="fw-bold mb-1 text-dark">
+                            <i class="bi bi-person-heart text-jeshua me-2"></i> Padrón de Padres y Apoderados
+                        </h4>
+                        <p class="text-muted small mb-0">
+                            Gestión de tutores legales, vinculación de 1 o más hijos por familia y administración de credenciales de acceso al portal de padres.
+                        </p>
+                    </div>
+                    <div class="col-md-5 text-md-end">
+                        <a th:href="@{/admin/apoderados/nuevo}" class="btn btn-jeshua fw-semibold rounded-pill px-4 shadow-sm">
+                            <i class="bi bi-person-plus-fill me-1"></i> Nuevo Apoderado
+                        </a>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- Barra de Búsqueda -->
+                <form th:action="@{/admin/apoderados}" method="get" class="row g-2">
+                    <div class="col-md-8 col-lg-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" name="q" class="form-control border-start-0" 
+                                   placeholder="Buscar por DNI, nombres o apellidos..." 
+                                   th:value="${busqueda}">
+                            <button class="btn btn-dark px-4" type="submit">Buscar</button>
+                            <a th:if="${busqueda != null and !busqueda.isEmpty()}" th:href="@{/admin/apoderados}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-6 text-md-end pt-2">
+                        <span class="badge bg-secondary rounded-pill px-3 py-2">
+                            Total: <strong th:text="${totalApoderados}">0</strong> apoderados registrados
+                        </span>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla de Apoderados -->
+        <div class="card border-0 shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">DNI / Usuario</th>
+                            <th>Apoderado</th>
+                            <th>Parentesco</th>
+                            <th>Contacto</th>
+                            <th>Hijos Vinculados</th>
+                            <th>Estado</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(apoderados)}">
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                                No se encontraron apoderados registrados con los términos buscados.
+                            </td>
+                        </tr>
+                        <tr th:each="ap : ${apoderados}">
+                            <td class="ps-4">
+                                <span class="fw-bold font-monospace text-dark" th:text="${ap.dni}">10234567</span><br>
+                                <small class="badge bg-light text-secondary border">Login: <span th:text="${ap.dni}"></span></small>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark" th:text="${ap.nombreCompleto}">Quispe Flores, Juan Carlos</div>
+                                <small class="text-muted" th:text="${ap.direccion != null ? ap.direccion : 'Sin dirección registrada'}"></small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info-subtle text-info border border-info" th:text="${ap.parentesco != null ? ap.parentesco : 'PADRE'}">PADRE</span>
+                            </td>
+                            <td>
+                                <div class="small text-dark"><i class="bi bi-telephone me-1 text-muted"></i> <span th:text="${ap.telefono != null ? ap.telefono : '-'}"></span></div>
+                                <div class="small text-muted"><i class="bi bi-envelope me-1"></i> <span th:text="${ap.email != null ? ap.email : '-'}"></span></div>
+                            </td>
+                            <td>
+                                <div th:if="${#lists.isEmpty(ap.estudiantes)}" class="text-muted small">
+                                    <span class="badge bg-warning-subtle text-warning border">Sin hijos vinculados</span>
+                                </div>
+                                <div th:unless="${#lists.isEmpty(ap.estudiantes)}" class="d-flex flex-wrap gap-1">
+                                    <span th:each="hijo : ${ap.estudiantes}" class="badge bg-light text-dark border">
+                                        <i class="bi bi-person-fill text-danger me-1"></i>
+                                        <span th:text="${hijo.nombreCompleto + ' (' + hijo.dni + ')'}">Lucas Quispe (71234567)</span>
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                <span th:if="${ap.activo}" class="badge bg-success-subtle text-success border border-success">Activo</span>
+                                <span th:unless="${ap.activo}" class="badge bg-danger-subtle text-danger border border-danger">Inactivo</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm">
+                                    <a th:href="@{/admin/apoderados/{id}/editar(id=${ap.id})}" 
+                                       class="btn btn-outline-primary" 
+                                       title="Editar apoderado y gestionar hijos">
+                                        <i class="bi bi-pencil-square"></i> Editar
+                                    </a>
+                                    <form th:action="@{/admin/apoderados/{id}/toggle-estado(id=${ap.id})}" method="post" class="d-inline">
+                                        <button type="submit" 
+                                                class="btn btn-outline-secondary" 
+                                                th:title="${ap.activo ? 'Desactivar acceso' : 'Activar acceso'}">
+                                            <i th:class="${ap.activo ? 'bi bi-person-x' : 'bi bi-person-check'}"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

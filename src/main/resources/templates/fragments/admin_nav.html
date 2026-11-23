@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- Sidebar fragment vertical a la izquierda -->
+    <div th:fragment="navbar(activeTab)">
+        <style>
+            :root {
+                --sidebar-width: 260px;
+                --jeshua-red: #b91c1c;
+                --jeshua-dark: #111827;
+            }
+            @media (min-width: 992px) {
+                body {
+                    padding-left: var(--sidebar-width) !important;
+                }
+                .admin-sidebar {
+                    width: var(--sidebar-width);
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    bottom: 0;
+                    height: 100vh;
+                    z-index: 1040;
+                    overflow-y: auto;
+                }
+            }
+            @media (max-width: 991.98px) {
+                body {
+                    padding-left: 0 !important;
+                }
+                .admin-sidebar {
+                    position: fixed;
+                    top: 0;
+                    left: -280px;
+                    bottom: 0;
+                    width: 280px;
+                    height: 100vh;
+                    z-index: 1050;
+                    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    overflow-y: auto;
+                }
+                .admin-sidebar.show {
+                    left: 0 !important;
+                }
+                .sidebar-backdrop {
+                    display: none;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.6);
+                    z-index: 1045;
+                    backdrop-filter: blur(2px);
+                }
+                .sidebar-backdrop.show {
+                    display: block !important;
+                }
+            }
+            .sidebar-nav .nav-link {
+                color: #d1d5db;
+                border-radius: 0.5rem;
+                padding: 0.65rem 0.95rem;
+                font-weight: 500;
+                font-size: 0.9rem;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                transition: all 0.15s ease-in-out;
+                margin-bottom: 0.2rem;
+            }
+            .sidebar-nav .nav-link:hover {
+                color: #ffffff;
+                background-color: rgba(255, 255, 255, 0.08);
+                transform: translateX(3px);
+            }
+            .sidebar-nav .nav-link.active {
+                color: #ffffff !important;
+                background-color: var(--jeshua-red) !important;
+                font-weight: 600;
+                box-shadow: 0 4px 12px rgba(185, 28, 28, 0.4);
+            }
+            .sidebar-section-title {
+                font-size: 0.72rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: #9ca3af;
+                font-weight: 700;
+                margin-top: 1.1rem;
+                margin-bottom: 0.4rem;
+                padding-left: 0.5rem;
+            }
+        </style>
+
+        <!-- Backdrop para dispositivos móviles -->
+        <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+        <!-- Barra lateral izquierda (Desktop fija / Móvil deslizable) -->
+        <aside id="adminSidebar" class="admin-sidebar bg-dark text-white d-flex flex-column border-end border-secondary border-opacity-25 shadow">
+            
+            <!-- Encabezado Institucional del Sidebar -->
+            <div class="p-3 border-bottom border-secondary border-opacity-25" style="background-color: #0f172a;">
+                <div class="d-flex align-items-center justify-content-between">
+                    <a th:href="@{/admin/dashboard}" class="text-white text-decoration-none d-flex align-items-center gap-2">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center p-1" style="background-color: var(--jeshua-red); min-width: 36px; min-height: 36px;">
+                            <img th:if="${(configColegio != null and configColegio.logoUrl != null and !#strings.isEmpty(configColegio.logoUrl)) or (colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl))}" 
+                                 th:src="${configColegio != null and configColegio.logoUrl != null ? configColegio.logoUrl : colegio.logoUrl}" 
+                                 alt="Logo" style="max-height: 28px; max-width: 28px; object-fit: contain;">
+                            <i th:unless="${(configColegio != null and configColegio.logoUrl != null and !#strings.isEmpty(configColegio.logoUrl)) or (colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl))}" 
+                               class="bi bi-mortarboard-fill text-warning fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold lh-1 text-truncate" style="max-width: 170px; font-size: 0.95rem;" 
+                                 th:text="${configColegio != null ? configColegio.nombreColegio : (colegio != null ? colegio.nombreColegio : 'I.E.P. Int. Jeshua')}">
+                                I.E.P. Jeshua
+                            </div>
+                            <small class="text-secondary" style="font-size: 0.72rem;">Tumán • Chiclayo</small>
+                        </div>
+                    </a>
+                    <button class="btn btn-sm btn-outline-secondary d-lg-none text-white border-0" onclick="toggleSidebar()">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Identificación de Usuario Directivo -->
+            <div class="px-3 py-2 border-bottom border-secondary border-opacity-25" style="background-color: rgba(255,255,255,0.02);">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="position-relative">
+                        <i class="bi bi-person-circle fs-3 text-danger"></i>
+                        <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-dark rounded-circle"></span>
+                    </div>
+                    <div class="overflow-hidden">
+                        <div class="fw-semibold text-white small text-truncate">Panel Directivo</div>
+                        <span class="badge bg-danger text-white px-2 py-0" style="font-size: 0.68rem;">ADMINISTRADOR</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enlaces de Navegación del Sidebar -->
+            <div class="p-3 flex-grow-1 overflow-auto sidebar-nav">
+                
+                <div class="sidebar-section-title">Principal</div>
+                <a th:href="@{/admin/dashboard}" class="nav-link" th:classappend="${activeTab == 'dashboard' ? 'active' : ''}">
+                    <i class="bi bi-speedometer2 fs-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a th:href="@{/auxiliar/escaner}" class="nav-link" target="_blank" title="Abrir escáner QR de asistencia">
+                    <i class="bi bi-qr-code-scan fs-5 text-warning"></i>
+                    <span>Lector QR (Cámara)</span>
+                    <span class="badge bg-warning text-dark ms-auto" style="font-size: 0.65rem;">VIVO</span>
+                </a>
+
+                <div class="sidebar-section-title">Gestión Académica</div>
+                <a th:href="@{/admin/estudiantes}" class="nav-link" th:classappend="${activeTab == 'estudiantes' ? 'active' : ''}">
+                    <i class="bi bi-people-fill fs-5"></i>
+                    <span>Estudiantes</span>
+                </a>
+                <a th:href="@{/admin/estudiantes/importar}" class="nav-link" th:classappend="${activeTab == 'importar' ? 'active' : ''}">
+                    <i class="bi bi-cloud-arrow-up-fill fs-5 text-info"></i>
+                    <span>Migrar Alumnos (CSV)</span>
+                    <span class="badge bg-info text-dark ms-auto" style="font-size: 0.65rem;">MIGRAR</span>
+                </a>
+                <a th:href="@{/admin/apoderados}" class="nav-link" th:classappend="${activeTab == 'apoderados' ? 'active' : ''}">
+                    <i class="bi bi-person-heart fs-5"></i>
+                    <span>Apoderados</span>
+                </a>
+                <a th:href="@{/admin/horarios}" class="nav-link" th:classappend="${activeTab == 'horarios' ? 'active' : ''}">
+                    <i class="bi bi-clock-history fs-5"></i>
+                    <span>Horarios y Tolerancia</span>
+                </a>
+
+                <div class="sidebar-section-title">Control de Asistencia</div>
+                <a th:href="@{/admin/justificaciones}" class="nav-link" th:classappend="${activeTab == 'justificaciones' ? 'active' : ''}">
+                    <i class="bi bi-file-earmark-medical-fill fs-5"></i>
+                    <span>Justificaciones</span>
+                    <span th:if="${totalJustificacionesPendientes != null and totalJustificacionesPendientes > 0}" 
+                          class="badge bg-danger rounded-pill ms-auto" 
+                          th:text="${totalJustificacionesPendientes}">1</span>
+                </a>
+                <a th:href="@{/admin/reportes}" class="nav-link" th:classappend="${activeTab == 'reportes' ? 'active' : ''}">
+                    <i class="bi bi-file-earmark-bar-graph-fill fs-5"></i>
+                    <span>Reportes y CSV</span>
+                </a>
+
+                <div class="sidebar-section-title">Sistema y Seguridad</div>
+                <a th:href="@{/admin/usuarios}" class="nav-link" th:classappend="${activeTab == 'usuarios' ? 'active' : ''}">
+                    <i class="bi bi-shield-lock-fill fs-5"></i>
+                    <span>Auxiliares y Permisos</span>
+                </a>
+                <a th:href="@{/admin/configuracion}" class="nav-link" th:classappend="${activeTab == 'configuracion' ? 'active' : ''}">
+                    <i class="bi bi-gear-fill fs-5"></i>
+                    <span>Datos del Colegio</span>
+                </a>
+                <a th:href="@{/padre/hijos}" class="nav-link" target="_blank" title="Ver interfaz de padres">
+                    <i class="bi bi-house-heart-fill fs-5 text-success"></i>
+                    <span>Portal de Padres</span>
+                    <i class="bi bi-box-arrow-up-right ms-auto small text-secondary"></i>
+                </a>
+
+            </div>
+
+            <!-- Pie del Sidebar: Cerrar Sesión -->
+            <div class="p-3 border-top border-secondary border-opacity-25" style="background-color: #0f172a;">
+                <form th:action="@{/logout}" method="post" class="m-0">
+                    <button type="submit" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 fw-semibold btn-sm py-2">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Cerrar Sesión</span>
+                    </button>
+                </form>
+            </div>
+
+        </aside>
+
+        <!-- Barra Superior Horizontal (TopBar para acciones rápidas y toggle móvil) -->
+        <header class="bg-white border-bottom shadow-sm px-4 py-2 mb-3 sticky-top">
+            <div class="d-flex align-items-center justify-content-between">
+                
+                <!-- Botón móvil para abrir el Sidebar -->
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-light border d-lg-none" type="button" onclick="toggleSidebar()" aria-label="Abrir Menú">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
+                    <div>
+                        <span class="badge bg-danger-subtle text-danger fw-bold border border-danger-subtle px-2 py-1">
+                            <i class="bi bi-building me-1"></i> I.E.P. Internacional Jeshua
+                        </span>
+                        <span class="text-muted small ms-2 d-none d-md-inline">Sistema Integrado de Asistencia Escolar</span>
+                    </div>
+                </div>
+
+                <!-- Acciones Rápidas en TopBar -->
+                <div class="d-flex align-items-center gap-2">
+                    <a th:href="@{/auxiliar/escaner}" class="btn btn-danger btn-sm rounded-pill px-3 shadow-sm" target="_blank" title="Abrir Escáner de Códigos QR">
+                        <i class="bi bi-camera-fill me-1"></i>
+                        <span class="d-none d-sm-inline">Escáner QR</span>
+                    </a>
+                    <a th:href="@{/admin/estudiantes/importar}" class="btn btn-outline-primary btn-sm rounded-pill px-3" title="Migración masiva de estudiantes">
+                        <i class="bi bi-cloud-arrow-up-fill me-1"></i>
+                        <span class="d-none d-sm-inline">Importar CSV</span>
+                    </a>
+                    <form th:action="@{/logout}" method="post" class="d-inline m-0">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill px-3" title="Salir del sistema">
+                            <i class="bi bi-power"></i>
+                            <span class="d-none d-md-inline ms-1">Salir</span>
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </header>
+
+        <script>
+            function toggleSidebar() {
+                const sidebar = document.getElementById('adminSidebar');
+                const backdrop = document.getElementById('sidebarBackdrop');
+                if (sidebar) sidebar.classList.toggle('show');
+                if (backdrop) backdrop.classList.toggle('show');
+            }
+        </script>
+    </div>
+
+</body>
+</html>

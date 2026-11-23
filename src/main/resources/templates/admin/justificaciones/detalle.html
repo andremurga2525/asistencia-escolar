@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Justificación #<span th:text="${justificacion.id}">1</span> - I.E.P. Internacional Jeshua</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        .bg-jeshua { background-color: #b91c1c !important; }
+        .text-jeshua { color: #b91c1c !important; }
+        .btn-jeshua { background-color: #b91c1c; color: white; }
+        .btn-jeshua:hover { background-color: #991b1b; color: white; }
+        .preview-pane {
+            min-height: 520px;
+            background: #f8fafc;
+            border-radius: 16px;
+            border: 2px dashed #cbd5e1;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Navbar compartido -->
+    <div th:replace="~{fragments/admin_nav :: navbar('justificaciones')}"></div>
+
+    <div class="container py-4">
+
+        <!-- Mensajes Flash -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Barra Superior de Navegación -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <a th:href="@{/admin/justificaciones}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                    <i class="bi bi-arrow-left me-1"></i> Volver a la Bandeja
+                </a>
+            </div>
+            <div>
+                <span class="text-muted small">Estado actual:</span>
+                <span th:if="${justificacion.estado.name() == 'PENDIENTE'}" class="badge bg-warning text-dark fs-6 px-3 py-2 rounded-pill">
+                    <i class="bi bi-hourglass-split me-1"></i> Pendiente de Resolución
+                </span>
+                <span th:if="${justificacion.estado.name() == 'APROBADA'}" class="badge bg-success fs-6 px-3 py-2 rounded-pill">
+                    <i class="bi bi-check-circle-fill me-1"></i> Justificación Aprobada
+                </span>
+                <span th:if="${justificacion.estado.name() == 'RECHAZADA'}" class="badge bg-danger fs-6 px-3 py-2 rounded-pill">
+                    <i class="bi bi-x-circle-fill me-1"></i> Justificación Rechazada
+                </span>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <!-- Columna Izquierda: Datos de la Solicitud y Acciones -->
+            <div class="col-lg-5">
+                
+                <!-- Datos del Alumno y Falta -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-dark mb-3">
+                            <i class="bi bi-person-badge-fill text-jeshua me-2"></i> Información del Estudiante
+                        </h5>
+
+                        <div class="mb-3">
+                            <label class="text-muted small d-block">Estudiante:</label>
+                            <h6 class="fw-bold text-dark mb-0" th:text="${justificacion.registroAsistencia.estudiante.nombreCompleto}">Mateo Quispe Mendoza</h6>
+                            <span class="text-muted small" th:text="'DNI: ' + ${justificacion.registroAsistencia.estudiante.dni}">DNI: 71234568</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-muted small d-block">Grado y Sección:</label>
+                            <span class="badge bg-light text-dark border px-2 py-1" 
+                                  th:text="${justificacion.registroAsistencia.matricula.seccion.grado.nombre + ' (' + justificacion.registroAsistencia.matricula.seccion.nombre + ') - Nivel ' + justificacion.registroAsistencia.matricula.seccion.grado.nivel.nombre}">
+                                3° Grado de Primaria (A)
+                            </span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-muted small d-block">Fecha de la Inasistencia:</label>
+                            <span class="fw-bold text-danger fs-6" th:text="${#temporals.format(justificacion.registroAsistencia.fecha, 'dd/MM/yyyy')}">25/10/2026</span>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <!-- Datos del Apoderado -->
+                        <h5 class="fw-bold text-dark mb-3">
+                            <i class="bi bi-person-heart text-jeshua me-2"></i> Apoderado Solicitante
+                        </h5>
+
+                        <div class="mb-2">
+                            <label class="text-muted small d-block">Nombre completo:</label>
+                            <span class="fw-semibold text-dark" th:text="${justificacion.apoderado.nombreCompleto}">Juan Carlos Quispe</span>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="text-muted small d-block">DNI / Teléfono de contacto:</label>
+                            <span class="text-dark" th:text="'DNI: ' + ${justificacion.apoderado.dni} + ' | Cel: ' + ${justificacion.apoderado.telefono}">DNI: 10234567 | Cel: +51 974 555 666</span>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <!-- Motivo y Plazo -->
+                        <h5 class="fw-bold text-dark mb-3">
+                            <i class="bi bi-chat-left-text-fill text-jeshua me-2"></i> Sustento del Apoderado
+                        </h5>
+
+                        <div class="p-3 bg-light rounded-3 border mb-3">
+                            <p class="mb-0 text-dark fst-italic" th:text="${justificacion.motivo}">
+                                Cita médica odontológica programada en el Centro de Salud de Tumán.
+                            </p>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center small text-muted">
+                            <div>
+                                <i class="bi bi-clock me-1"></i> Enviado: 
+                                <strong th:text="${#temporals.format(justificacion.fechaSolicitud, 'dd/MM/yyyy HH:mm')}">26/10/2026 09:15</strong>
+                            </div>
+                            <div>
+                                <span th:if="${justificacion.estaDentroDelPlazo(justificacion.fechaSolicitud)}" class="badge bg-success-subtle text-success border border-success">
+                                    <i class="bi bi-check-circle me-1"></i> Dentro de las 48h
+                                </span>
+                                <span th:unless="${justificacion.estaDentroDelPlazo(justificacion.fechaSolicitud)}" class="badge bg-danger-subtle text-danger border border-danger">
+                                    <i class="bi bi-x-circle me-1"></i> Fuera de plazo
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Panel de Resolución (Aprobar / Rechazar) -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-dark mb-3">
+                            <i class="bi bi-check2-circle text-jeshua me-2"></i> Resolución de la Dirección
+                        </h5>
+
+                        <!-- Si está Pendiente -->
+                        <div th:if="${justificacion.estado.name() == 'PENDIENTE'}">
+                            <p class="small text-muted mb-3">
+                                Seleccione la acción correspondiente luego de verificar la autenticidad del documento de evidencia:
+                            </p>
+
+                            <!-- Formulario Aprobar -->
+                            <form th:action="@{/admin/justificaciones/{id}/aprobar(id=${justificacion.id})}" method="post" class="mb-3">
+                                <div class="mb-2">
+                                    <label class="form-label small fw-bold">Observación de aprobación (opcional):</label>
+                                    <input type="text" class="form-control form-control-sm" name="observacion" 
+                                           placeholder="Ej: Se valida constancia médica emitida por Centro de Salud.">
+                                </div>
+                                <button type="submit" class="btn btn-success w-100 fw-semibold rounded-pill py-2 shadow-sm">
+                                    <i class="bi bi-check-lg me-1"></i> Aprobar Justificación (Cambiar a Justificado)
+                                </button>
+                            </form>
+
+                            <hr class="my-3">
+
+                            <!-- Formulario Rechazar -->
+                            <form th:action="@{/admin/justificaciones/{id}/rechazar(id=${justificacion.id})}" method="post">
+                                <div class="mb-2">
+                                    <label class="form-label small fw-bold text-danger">Motivo de Rechazo: <span class="text-danger">*</span></label>
+                                    <textarea class="form-control form-control-sm" name="motivoRechazo" rows="2" 
+                                              placeholder="Especifique el motivo por el cual se deniega la justificación..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-outline-danger w-100 fw-semibold rounded-pill py-2">
+                                    <i class="bi bi-x-lg me-1"></i> Rechazar Justificación
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Si ya está Resuelta (Aprobada o Rechazada) -->
+                        <div th:unless="${justificacion.estado.name() == 'PENDIENTE'}" class="p-3 bg-light rounded-3 border">
+                            <div class="mb-2">
+                                <span class="text-muted small d-block">Revisado por:</span>
+                                <strong class="text-dark" th:text="${justificacion.revisadoPor != null ? justificacion.revisadoPor.nombreCompleto : 'Dirección General'}">Director</strong>
+                            </div>
+                            <div class="mb-2">
+                                <span class="text-muted small d-block">Fecha de revisión:</span>
+                                <span class="text-dark small" th:text="${justificacion.fechaRevision != null ? #temporals.format(justificacion.fechaRevision, 'dd/MM/yyyy HH:mm:ss') : '-'}">-</span>
+                            </div>
+                            <div>
+                                <span class="text-muted small d-block">Resolución / Comentario:</span>
+                                <p class="mb-0 fw-semibold" 
+                                   th:classappend="${justificacion.estado.name() == 'APROBADA' ? 'text-success' : 'text-danger'}"
+                                   th:text="${justificacion.observacionRevision != null ? justificacion.observacionRevision : 'Sin comentario adicional.'}">
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Columna Derecha: VISUALIZADOR DE EVIDENCIA (PDF o Imagen) -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold text-dark mb-0">
+                                <i class="bi bi-paperclip text-jeshua me-2"></i> Documento de Evidencia Adjunto
+                            </h5>
+                            <small class="text-muted" th:text="${justificacion.archivoEvidencia != null ? justificacion.archivoEvidencia : 'Sin archivo adjunto'}">archivo.pdf</small>
+                        </div>
+                        <div th:if="${tieneArchivo}">
+                            <a th:href="@{/admin/justificaciones/{id}/evidencia(id=${justificacion.id})}" 
+                               target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> Abrir en pestaña nueva
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-4">
+                        
+                        <!-- Caso 1: Archivo PDF -->
+                        <div th:if="${esPdf}" class="h-100">
+                            <div class="alert alert-info py-2 small mb-3">
+                                <i class="bi bi-info-circle me-1"></i> Documento PDF adjuntado por el padre de familia. Se muestra el visor interactivo:
+                            </div>
+                            <iframe th:src="@{/admin/justificaciones/{id}/evidencia(id=${justificacion.id})}" 
+                                    style="width: 100%; height: 600px; border-radius: 12px; border: 1px solid #cbd5e1;">
+                            </iframe>
+                        </div>
+
+                        <!-- Caso 2: Imagen (JPG o PNG) -->
+                        <div th:if="${esImagen}" class="text-center">
+                            <div class="alert alert-info py-2 small mb-3 text-start">
+                                <i class="bi bi-info-circle me-1"></i> Fotografía / Imagen de constancia médica adjuntada por el padre de familia:
+                            </div>
+                            <div class="p-2 border rounded-3 bg-light d-inline-block">
+                                <img th:src="@{/admin/justificaciones/{id}/evidencia(id=${justificacion.id})}" 
+                                     alt="Evidencia médica" class="img-fluid rounded-2 shadow-sm" style="max-height: 580px;">
+                            </div>
+                        </div>
+
+                        <!-- Caso 3: Sin archivo adjunto -->
+                        <div th:if="${!tieneArchivo}" class="preview-pane d-flex flex-column align-items-center justify-content-center text-center p-5">
+                            <i class="bi bi-file-earmark-x text-muted" style="font-size: 4rem;"></i>
+                            <h6 class="fw-bold text-secondary mt-3">No se adjuntó archivo de evidencia</h6>
+                            <p class="text-muted small" style="max-width: 320px;">
+                                El apoderado no incluyó constancia médica digital en su solicitud. Evalúe el sustento redactado en el panel izquierdo.
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

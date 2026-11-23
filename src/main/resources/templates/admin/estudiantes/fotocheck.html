@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fotocheck Estudiantil - <span th:text="${estudiante.nombreCompleto}">Estudiante</span></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Generador de QR del lado del cliente para máxima velocidad y nitidez -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        .bg-jeshua { background-color: #b91c1c !important; }
+        .text-jeshua { color: #b91c1c !important; }
+        
+        /* Estilos del carnet escolar (dimensiones estándar CR80 proporcionales) */
+        .fotocheck-card {
+            width: 350px;
+            height: 520px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            position: relative;
+            margin: auto;
+        }
+
+        .fotocheck-header {
+            background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+            color: white;
+            padding: 24px 16px 36px 16px;
+            text-align: center;
+            border-bottom-left-radius: 50% 20px;
+            border-bottom-right-radius: 50% 20px;
+        }
+
+        .avatar-container {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: #f8fafc;
+            border: 4px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin: -45px auto 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-wrapper {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 12px;
+            display: inline-block;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+            }
+            .fotocheck-card {
+                box-shadow: none !important;
+                border: 1px solid #ccc;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light py-4">
+
+    <!-- Barra de acciones superior -->
+    <div class="container mb-4 no-print">
+        <div class="d-flex justify-content-between align-items-center">
+            <a th:href="@{/admin/estudiantes}" class="btn btn-outline-secondary rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Volver a Estudiantes
+            </a>
+            <div class="d-flex gap-2">
+                <button onclick="window.print()" class="btn btn-danger fw-semibold rounded-pill px-4 shadow-sm bg-jeshua">
+                    <i class="bi bi-printer-fill me-1"></i> Imprimir Fotocheck
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carnet Escolar / Fotocheck Imprimible -->
+    <div class="container text-center">
+        <div class="fotocheck-card">
+            
+            <!-- Encabezado con Identidad Institucional -->
+            <div class="fotocheck-header">
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                    <i class="bi bi-mortarboard-fill fs-3 text-warning"></i>
+                    <h5 class="fw-bold mb-0 text-white" th:text="${configColegio.nombreColegio}">I.E.P. Internacional Jeshua</h5>
+                </div>
+                <small class="text-white-50 text-uppercase letter-spacing-1 d-block" style="font-size: 0.72rem;">
+                    Tumán - Chiclayo - Lambayeque
+                </small>
+                <span class="badge bg-warning text-dark fw-bold rounded-pill px-3 py-1 mt-2">
+                    AÑO ESCOLAR 2026
+                </span>
+            </div>
+
+            <!-- Avatar del estudiante -->
+            <div class="avatar-container">
+                <i th:class="${estudiante.genero == 'F' ? 'bi bi-person-fill text-danger' : 'bi bi-person-fill text-primary'}" style="font-size: 3.2rem;"></i>
+            </div>
+
+            <!-- Datos del estudiante -->
+            <div class="px-3">
+                <h5 class="fw-bold text-dark mb-0" th:text="${estudiante.nombreCompleto}">Lucas Gabriel Quispe</h5>
+                <p class="text-muted small mb-2">
+                    DNI: <strong class="text-dark font-monospace" th:text="${estudiante.dni}">71234567</strong>
+                </p>
+
+                <!-- Grado y Sección -->
+                <div class="mb-3">
+                    <span th:if="${matricula != null}" 
+                          class="badge bg-light text-dark border px-3 py-2 fw-semibold"
+                          th:text="${matricula.seccion.grado.nombre + ' - Sección ' + matricula.seccion.nombre}">
+                        1° Grado de Primaria - Sec. A
+                    </span>
+                    <span th:unless="${matricula != null}" class="badge bg-secondary px-3 py-2">
+                        Estudiante Regular
+                    </span>
+                </div>
+
+                <!-- Código QR Institucional -->
+                <div class="qr-wrapper mb-2">
+                    <div id="qrcode"></div>
+                </div>
+
+                <div class="font-monospace fw-bold small text-muted" th:text="${estudiante.codigoQr}">
+                    JESHUA-XXXXXXXX
+                </div>
+                <small class="text-muted d-block" style="font-size: 0.68rem;">
+                    Credencial oficial intransferible para control de asistencia escolar.
+                </small>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script de generación del código QR -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const codigoQr = /*[[${estudiante.codigoQr}]]*/ 'JESHUA-DEMO';
+        new QRCode(document.getElementById("qrcode"), {
+            text: codigoQr,
+            width: 130,
+            height: 130,
+            colorDark : "#1e293b",
+            colorLight : "#f8fafc",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+        /*]]>*/
+    </script>
+
+</body>
+</html>

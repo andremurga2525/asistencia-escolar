@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${esEdicion ? 'Editar Apoderado' : 'Nuevo Apoderado'} + ' - I.E.P. Internacional Jeshua'">Apoderado - I.E.P. Internacional Jeshua</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        .bg-jeshua { background-color: #b91c1c !important; }
+        .text-jeshua { color: #b91c1c !important; }
+        .btn-jeshua { background-color: #b91c1c; color: white; }
+        .btn-jeshua:hover { background-color: #991b1b; color: white; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Navbar compartido -->
+    <div th:replace="~{fragments/admin_nav :: navbar('apoderados')}"></div>
+
+    <div class="container py-4">
+
+        <!-- Mensajes Flash -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h4 class="fw-bold mb-1 text-dark">
+                                    <i class="bi bi-person-heart text-jeshua me-2"></i>
+                                    <span th:text="${esEdicion ? 'Editar Datos del Apoderado' : 'Registro de Nuevo Apoderado'}"></span>
+                                </h4>
+                                <p class="text-muted small mb-0">
+                                    El DNI ingresado se configurará automáticamente como usuario de acceso para el portal de padres.
+                                </p>
+                            </div>
+                            <a th:href="@{/admin/apoderados}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                                <i class="bi bi-arrow-left me-1"></i> Volver al listado
+                            </a>
+                        </div>
+                        <hr class="mt-3 mb-0">
+                    </div>
+
+                    <div class="card-body p-4">
+                        <form th:action="${esEdicion ? '/admin/apoderados/' + apoderado.id + '/actualizar' : '/admin/apoderados/guardar'}" 
+                              th:object="${apoderado}" 
+                              method="post">
+
+                            <h5 class="fw-bold text-secondary mb-3 fs-6 text-uppercase">1. Datos Personales y de Contacto</h5>
+                            <div class="row g-3 mb-4">
+                                <!-- DNI -->
+                                <div class="col-md-4">
+                                    <label for="dni" class="form-label fw-semibold">DNI (8 dígitos) <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="dni" th:field="*{dni}" 
+                                           maxlength="8" pattern="[0-9]{8}" placeholder="Ej: 10234567" 
+                                           th:readonly="${esEdicion}" required>
+                                    <div class="text-danger small mt-1" th:if="${#fields.hasErrors('dni')}" th:errors="*{dni}"></div>
+                                </div>
+
+                                <!-- Nombres -->
+                                <div class="col-md-4">
+                                    <label for="nombres" class="form-label fw-semibold">Nombres <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="nombres" th:field="*{nombres}" 
+                                           placeholder="Ej: Juan Carlos" required>
+                                    <div class="text-danger small mt-1" th:if="${#fields.hasErrors('nombres')}" th:errors="*{nombres}"></div>
+                                </div>
+
+                                <!-- Apellidos -->
+                                <div class="col-md-4">
+                                    <label for="apellidos" class="form-label fw-semibold">Apellidos <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="apellidos" th:field="*{apellidos}" 
+                                           placeholder="Ej: Quispe Flores" required>
+                                    <div class="text-danger small mt-1" th:if="${#fields.hasErrors('apellidos')}" th:errors="*{apellidos}"></div>
+                                </div>
+
+                                <!-- Parentesco -->
+                                <div class="col-md-4">
+                                    <label for="parentesco" class="form-label fw-semibold">Parentesco <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="parentesco" th:field="*{parentesco}" required>
+                                        <option value="PADRE">Padre</option>
+                                        <option value="MADRE">Madre</option>
+                                        <option value="APODERADO_LEGAL">Apoderado Legal / Tutor</option>
+                                    </select>
+                                </div>
+
+                                <!-- Teléfono -->
+                                <div class="col-md-4">
+                                    <label for="telefono" class="form-label fw-semibold">Teléfono Celular <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="telefono" th:field="*{telefono}" 
+                                           placeholder="Ej: +51 974 555 666" required>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="col-md-4">
+                                    <label for="email" class="form-label fw-semibold">Correo Electrónico</label>
+                                    <input type="email" class="form-control" id="email" th:field="*{email}" 
+                                           placeholder="Ej: padre.quispe@gmail.com">
+                                </div>
+
+                                <!-- Dirección -->
+                                <div class="col-md-8">
+                                    <label for="direccion" class="form-label fw-semibold">Dirección de Domicilio</label>
+                                    <input type="text" class="form-control" id="direccion" th:field="*{direccion}" 
+                                           placeholder="Ej: Calle San Martín 145, Tumán">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch pt-4">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="activo" th:field="*{activo}">
+                                        <label class="form-check-label fw-semibold" for="activo">Apoderado Activo</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contraseña Inicial (Solo en creación) -->
+                            <div th:if="${!esEdicion}">
+                                <h5 class="fw-bold text-secondary mb-3 fs-6 text-uppercase">2. Credenciales de Acceso al Portal</h5>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label for="passwordInicial" class="form-label fw-semibold">Contraseña Inicial de Acceso</label>
+                                        <input type="text" class="form-control" id="passwordInicial" name="passwordInicial" 
+                                               value="padre123" required>
+                                        <div class="form-text small">
+                                            El usuario de ingreso será su <strong>DNI</strong>. Por defecto: <code>padre123</code>.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Vinculación de Estudiantes en Creación -->
+                            <div th:if="${!esEdicion}">
+                                <h5 class="fw-bold text-secondary mb-3 fs-6 text-uppercase">3. Vincular Hijos (Estudiantes a Cargo)</h5>
+                                <p class="text-muted small mb-2">Seleccione los estudiantes que estarán a cargo de este apoderado (puede seleccionar 1, 2, 3 o más):</p>
+                                
+                                <div class="border rounded-3 p-3 bg-light mb-4" style="max-height: 220px; overflow-y: auto;">
+                                    <div th:each="est : ${todosEstudiantes}" class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="estudiantesIds" 
+                                               th:value="${est.id}" th:id="'est_' + ${est.id}">
+                                        <label class="form-check-label text-dark" th:for="'est_' + ${est.id}">
+                                            <strong th:text="${est.nombreCompleto}">Lucas Quispe</strong> 
+                                            <span class="text-muted" th:text="'(DNI: ' + ${est.dni} + ')'"></span>
+                                        </label>
+                                    </div>
+                                    <div th:if="${#lists.isEmpty(todosEstudiantes)}" class="text-muted small">
+                                        No hay estudiantes registrados para vincular.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a th:href="@{/admin/apoderados}" class="btn btn-light border px-4">Cancelar</a>
+                                <button type="submit" class="btn btn-jeshua fw-semibold px-4">
+                                    <i class="bi bi-save me-1"></i>
+                                    <span th:text="${esEdicion ? 'Actualizar Apoderado' : 'Guardar y Crear Cuenta'}"></span>
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN DE GESTIÓN AVANZADA DE HIJOS (Solo en Modo Edición) -->
+                <div th:if="${esEdicion}" class="row g-4 mb-4">
+                    
+                    <!-- Hijos Actualmente Vinculados -->
+                    <div class="col-md-7">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <h5 class="fw-bold text-dark mb-3">
+                                    <i class="bi bi-people-fill text-jeshua me-2"></i> Hijos Vinculados Actualmente
+                                </h5>
+
+                                <div th:if="${#lists.isEmpty(apoderado.estudiantes)}" class="alert alert-warning small">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Este apoderado no tiene ningún hijo vinculado.
+                                </div>
+
+                                <div th:unless="${#lists.isEmpty(apoderado.estudiantes)}" class="list-group list-group-flush">
+                                    <div th:each="hijo : ${apoderado.estudiantes}" 
+                                         class="list-group-item d-flex justify-content-between align-items-center px-0 py-3">
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-0" th:text="${hijo.nombreCompleto}">Lucas Quispe</h6>
+                                            <small class="text-muted" th:text="'DNI: ' + ${hijo.dni} + ' | QR: ' + ${hijo.codigoQr}"></small>
+                                        </div>
+                                        <form th:action="@{/admin/apoderados/{id}/desvincular-estudiante/{estId}(id=${apoderado.id}, estId=${hijo.id})}" 
+                                              method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                                                    onclick="return confirm('¿Está seguro de desvincular a este estudiante de su apoderado?')">
+                                                <i class="bi bi-trash"></i> Desvincular
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <hr class="my-3">
+
+                                <!-- Formulario Vincular Hijo por DNI -->
+                                <form th:action="@{/admin/apoderados/{id}/vincular-estudiante(id=${apoderado.id})}" method="post">
+                                    <label class="form-label small fw-bold text-dark mb-1">Vincular otro hijo por su DNI:</label>
+                                    <div class="input-group">
+                                        <input type="text" name="dniHijo" class="form-control" placeholder="DNI del estudiante (8 dígitos)" maxlength="8" required>
+                                        <button class="btn btn-dark" type="submit">
+                                            <i class="bi bi-plus-lg me-1"></i> Vincular
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reset de Contraseña -->
+                    <div class="col-md-5">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <h5 class="fw-bold text-dark mb-3">
+                                    <i class="bi bi-key-fill text-warning me-2"></i> Cuenta de Acceso al Portal
+                                </h5>
+                                <p class="small text-muted mb-2">
+                                    Usuario de ingreso: <strong class="text-dark font-monospace" th:text="${apoderado.dni}">10234567</strong>
+                                </p>
+
+                                <form th:action="@{/admin/apoderados/{id}/reset-password(id=${apoderado.id})}" method="post">
+                                    <label for="nuevaPassword" class="form-label small fw-bold text-dark mb-1">Nueva Contraseña:</label>
+                                    <div class="input-group mb-3">
+                                        <input type="password" id="nuevaPassword" name="nuevaPassword" class="form-control" 
+                                               placeholder="Mínimo 4 caracteres..." required minlength="4">
+                                        <button class="btn btn-warning fw-bold text-dark" type="submit">
+                                            Cambiar
+                                        </button>
+                                    </div>
+                                    <small class="text-muted d-block">
+                                        Use este botón si el padre de familia extravió o no recuerda su clave de acceso.
+                                    </small>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
