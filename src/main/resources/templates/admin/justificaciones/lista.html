@@ -18,7 +18,7 @@
     <!-- Navbar compartido -->
     <div th:replace="~{fragments/admin_nav :: navbar('justificaciones')}"></div>
 
-    <div class="container py-4">
+    <div class="container-fluid px-2 px-sm-3 px-md-4 py-3">
 
         <!-- Mensajes Flash -->
         <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
@@ -84,7 +84,7 @@
         <!-- Tabla de Solicitudes -->
         <div class="card border-0 shadow-sm">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" style="min-width: 680px;">
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4"># Solicitud</th>

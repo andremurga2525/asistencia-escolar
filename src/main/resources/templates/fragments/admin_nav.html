@@ -35,13 +35,15 @@
                 .admin-sidebar {
                     position: fixed;
                     top: 0;
-                    left: -280px;
+                    left: -290px;
                     bottom: 0;
                     width: 280px;
+                    max-width: 85vw;
                     height: 100vh;
                     z-index: 1050;
                     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                     overflow-y: auto;
+                    -webkit-overflow-scrolling: touch;
                 }
                 .admin-sidebar.show {
                     left: 0 !important;
@@ -149,7 +151,7 @@
                     <i class="bi bi-speedometer2 fs-5"></i>
                     <span>Dashboard</span>
                 </a>
-                <a th:href="@{/auxiliar/escaner}" class="nav-link" target="_blank" title="Abrir escáner QR de asistencia">
+                <a th:href="@{/auxiliar/escaner}" class="nav-link" title="Abrir escáner QR de asistencia">
                     <i class="bi bi-qr-code-scan fs-5 text-warning"></i>
                     <span>Lector QR (Cámara)</span>
                     <span class="badge bg-warning text-dark ms-auto" style="font-size: 0.65rem;">VIVO</span>
@@ -196,7 +198,7 @@
                     <i class="bi bi-gear-fill fs-5"></i>
                     <span>Datos del Colegio</span>
                 </a>
-                <a th:href="@{/padre/hijos}" class="nav-link" target="_blank" title="Ver interfaz de padres">
+                <a th:href="@{/padre/hijos}" class="nav-link" title="Ver interfaz de padres">
                     <i class="bi bi-house-heart-fill fs-5 text-success"></i>
                     <span>Portal de Padres</span>
                     <i class="bi bi-box-arrow-up-right ms-auto small text-secondary"></i>
@@ -217,36 +219,38 @@
         </aside>
 
         <!-- Barra Superior Horizontal (TopBar para acciones rápidas y toggle móvil) -->
-        <header class="bg-white border-bottom shadow-sm px-4 py-2 mb-3 sticky-top">
-            <div class="d-flex align-items-center justify-content-between">
+        <header class="bg-white border-bottom shadow-sm px-2 px-sm-3 px-lg-4 py-2 mb-3 sticky-top">
+            <div class="d-flex align-items-center justify-content-between flex-nowrap gap-2">
                 
-                <!-- Botón móvil para abrir el Sidebar -->
-                <div class="d-flex align-items-center gap-3">
-                    <button class="btn btn-light border d-lg-none" type="button" onclick="toggleSidebar()" aria-label="Abrir Menú">
+                <!-- Botón móvil para abrir el Sidebar y Logo -->
+                <div class="d-flex align-items-center gap-2 min-w-0">
+                    <button class="btn btn-light border d-lg-none flex-shrink-0" type="button" onclick="toggleSidebar()" aria-label="Abrir Menú" style="padding: 0.35rem 0.6rem;">
                         <i class="bi bi-list fs-5"></i>
                     </button>
-                    <div>
-                        <span class="badge bg-danger-subtle text-danger fw-bold border border-danger-subtle px-2 py-1">
-                            <i class="bi bi-building me-1"></i> I.E.P. Internacional Jeshua
+                    <div class="text-truncate">
+                        <span class="badge bg-danger-subtle text-danger fw-bold border border-danger-subtle px-2 py-1 text-truncate">
+                            <i class="bi bi-building me-1"></i>
+                            <span class="d-none d-sm-inline">I.E.P. Internacional Jeshua</span>
+                            <span class="d-inline d-sm-none">I.E.P. Jeshua</span>
                         </span>
-                        <span class="text-muted small ms-2 d-none d-md-inline">Sistema Integrado de Asistencia Escolar</span>
+                        <span class="text-muted small ms-2 d-none d-lg-inline">Sistema Integrado de Asistencia Escolar</span>
                     </div>
                 </div>
 
                 <!-- Acciones Rápidas en TopBar -->
-                <div class="d-flex align-items-center gap-2">
-                    <a th:href="@{/auxiliar/escaner}" class="btn btn-danger btn-sm rounded-pill px-3 shadow-sm" target="_blank" title="Abrir Escáner de Códigos QR">
-                        <i class="bi bi-camera-fill me-1"></i>
+                <div class="d-flex align-items-center gap-1 gap-sm-2 flex-shrink-0">
+                    <a th:href="@{/auxiliar/escaner}" class="btn btn-danger btn-sm rounded-pill px-2 px-sm-3 shadow-sm d-inline-flex align-items-center gap-1" title="Abrir Escáner de Códigos QR">
+                        <i class="bi bi-camera-fill"></i>
                         <span class="d-none d-sm-inline">Escáner QR</span>
                     </a>
-                    <a th:href="@{/admin/estudiantes/importar}" class="btn btn-outline-primary btn-sm rounded-pill px-3" title="Migración masiva de estudiantes">
-                        <i class="bi bi-cloud-arrow-up-fill me-1"></i>
-                        <span class="d-none d-sm-inline">Importar CSV</span>
+                    <a th:href="@{/admin/estudiantes/importar}" class="btn btn-outline-primary btn-sm rounded-pill px-2 px-sm-3 d-inline-flex align-items-center gap-1" title="Migración masiva de estudiantes">
+                        <i class="bi bi-cloud-arrow-up-fill"></i>
+                        <span class="d-none d-md-inline">Importar CSV</span>
                     </a>
                     <form th:action="@{/logout}" method="post" class="d-inline m-0">
-                        <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill px-3" title="Salir del sistema">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill px-2 px-sm-3 d-inline-flex align-items-center gap-1" title="Salir del sistema">
                             <i class="bi bi-power"></i>
-                            <span class="d-none d-md-inline ms-1">Salir</span>
+                            <span class="d-none d-md-inline">Salir</span>
                         </button>
                     </form>
                 </div>
@@ -261,6 +265,17 @@
                 if (sidebar) sidebar.classList.toggle('show');
                 if (backdrop) backdrop.classList.toggle('show');
             }
+            // Cerrar sidebar al hacer clic en enlaces en móviles
+            document.addEventListener('DOMContentLoaded', function() {
+                const navLinks = document.querySelectorAll('#adminSidebar .nav-link');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth < 992) {
+                            toggleSidebar();
+                        }
+                    });
+                });
+            });
         </script>
     </div>
 
