@@ -2,6 +2,7 @@ package com.colegio.asistencia.config;
 
 import com.colegio.asistencia.model.*;
 import com.colegio.asistencia.repository.*;
+import com.colegio.asistencia.util.FechaUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -240,7 +241,7 @@ public class DataInitializer {
             apoderadoRepository.save(padreParedes);
 
             // 10. Registros de Asistencia: HOY (Estadisticas de Dashboard)
-            LocalDate hoy = LocalDate.now();
+            LocalDate hoy = FechaUtil.hoyPeru();
             if (lucas != null && matLucas != null && asistenciaRepository.findByEstudianteIdAndFecha(lucas.getId(), hoy).isEmpty()) {
                 asistenciaRepository.save(new RegistroAsistencia(lucas, anio2026, matLucas, hoy, LocalTime.of(7, 25), EstadoPuntualidad.PUNTUAL, auxiliarUser));
             }

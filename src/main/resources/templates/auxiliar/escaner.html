@@ -145,7 +145,12 @@
                         <h4 class="fw-bold text-dark mb-0 fs-5 fs-sm-4">
                             <i class="bi bi-camera-video-fill text-danger me-2"></i> Lector QR en Vivo
                         </h4>
-                        <span id="cameraStatusBadge" class="badge bg-secondary rounded-pill px-2 px-sm-3 py-1">Cámara en espera</span>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="badge bg-dark rounded-pill px-2 py-1 font-monospace shadow-sm" title="Hora oficial del Perú (Tumán)">
+                                <i class="bi bi-clock me-1 text-warning"></i> <span id="relojPeruHora">--:--:--</span>
+                            </span>
+                            <span id="cameraStatusBadge" class="badge bg-secondary rounded-pill px-2 px-sm-3 py-1">Cámara en espera</span>
+                        </div>
                     </div>
                     <p class="text-muted small mb-3">
                         Acerque el código QR del fotocheck a la cámara para registrar la asistencia automáticamente.
@@ -532,7 +537,7 @@
                     hudAlumno.className = 'fw-bold mb-1 text-white';
                     hudDetalle.textContent = `Código escaneado: ${codigo}`;
                     hudDetalle.className = 'small text-white-50 mb-0';
-                    hudHora.textContent = new Date().toLocaleTimeString();
+                    hudHora.textContent = new Date().toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour12: false });
                 }
 
             } catch (err) {
@@ -608,6 +613,17 @@
                 }
             }
         });
+
+        // Reloj digital en vivo en hora oficial del Perú (America/Lima)
+        function actualizarRelojPeru() {
+            const relojElem = document.getElementById('relojPeruHora');
+            if (relojElem) {
+                const ahora = new Date();
+                relojElem.textContent = ahora.toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour12: false });
+            }
+        }
+        setInterval(actualizarRelojPeru, 1000);
+        actualizarRelojPeru();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

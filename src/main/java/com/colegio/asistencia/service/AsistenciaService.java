@@ -2,6 +2,7 @@ package com.colegio.asistencia.service;
 
 import com.colegio.asistencia.model.*;
 import com.colegio.asistencia.repository.*;
+import com.colegio.asistencia.util.FechaUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,8 +56,8 @@ public class AsistenciaService {
         Matricula matricula = matriculaRepository.findByEstudianteCodigoQrAndAnioEscolarActivoTrue(codigoQr.trim())
                 .orElseThrow(() -> new IllegalStateException("El estudiante no cuenta con matrícula activa para el año lectivo."));
 
-        LocalDate hoy = LocalDate.now();
-        LocalTime ahora = LocalTime.now();
+        LocalDate hoy = FechaUtil.hoyPeru();
+        LocalTime ahora = FechaUtil.ahoraHoraPeru();
 
         // Validar si ya registró asistencia hoy
         Optional<RegistroAsistencia> existenteOpt = asistenciaRepository.findByEstudianteIdAndFecha(estudiante.getId(), hoy);
@@ -107,8 +108,8 @@ public class AsistenciaService {
 
     @Transactional
     public RegistroAsistencia registrarSalidaPorQr(String codigoQr, String usernameAuxiliar) {
-        LocalDate hoy = LocalDate.now();
-        LocalTime ahora = LocalTime.now();
+        LocalDate hoy = FechaUtil.hoyPeru();
+        LocalTime ahora = FechaUtil.ahoraHoraPeru();
 
         RegistroAsistencia registro = asistenciaRepository.findByEstudianteCodigoQrAndFecha(codigoQr.trim(), hoy)
                 .orElseThrow(() -> new IllegalStateException("No existe un registro de entrada para este estudiante el día de hoy. Debe registrar su entrada primero."));

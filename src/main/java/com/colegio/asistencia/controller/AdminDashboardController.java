@@ -5,6 +5,7 @@ import com.colegio.asistencia.repository.ConfiguracionColegioRepository;
 import com.colegio.asistencia.repository.JustificacionInasistenciaRepository;
 import com.colegio.asistencia.repository.RegistroAsistenciaRepository;
 import com.colegio.asistencia.service.AsistenciaService;
+import com.colegio.asistencia.util.FechaUtil;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -37,7 +38,7 @@ public class AdminDashboardController {
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
-        LocalDate hoy = LocalDate.now();
+        LocalDate hoy = FechaUtil.hoyPeru();
 
         // 1. Estadísticas calculadas directamente de MySQL 8.4
         Map<String, Object> stats = asistenciaService.obtenerEstadisticasDashboard(hoy);

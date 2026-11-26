@@ -5,6 +5,7 @@ import com.colegio.asistencia.model.RegistroAsistencia;
 import com.colegio.asistencia.repository.ConfiguracionColegioRepository;
 import com.colegio.asistencia.repository.RegistroAsistenciaRepository;
 import com.colegio.asistencia.service.AsistenciaService;
+import com.colegio.asistencia.util.FechaUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -40,7 +41,7 @@ public class AuxiliarController {
 
     @GetMapping("/escaner")
     public String escaner(Model model) {
-        LocalDate hoy = LocalDate.now();
+        LocalDate hoy = FechaUtil.hoyPeru();
         List<RegistroAsistencia> escaneosHoy = asistenciaRepository.findByFechaOrderByHoraEntradaAsc(hoy);
 
         ConfiguracionColegio colegio = configuracionRepository.findFirstByActivoTrue()

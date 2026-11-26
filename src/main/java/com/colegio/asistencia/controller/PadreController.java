@@ -3,6 +3,7 @@ package com.colegio.asistencia.controller;
 import com.colegio.asistencia.model.*;
 import com.colegio.asistencia.repository.*;
 import com.colegio.asistencia.service.FileStorageService;
+import com.colegio.asistencia.util.FechaUtil;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -69,7 +70,7 @@ public class PadreController {
         Map<Long, List<RegistroAsistencia>> asistenciasPorHijo = new HashMap<>();
         Map<Long, Boolean> plazoValidoPorRegistro = new HashMap<>();
         Map<Long, JustificacionInasistencia> justificacionesPorRegistro = new HashMap<>();
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = FechaUtil.ahoraFechaHoraPeru();
 
         for (Estudiante hijo : hijosFiltrados) {
             List<RegistroAsistencia> asistencias = asistenciaRepository.findByEstudianteDniOrderByFechaDesc(hijo.getDni());
@@ -122,7 +123,7 @@ public class PadreController {
         }
 
         // Seguridad estricta: Verificar la ventana de 48 horas calculada por el servidor
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = FechaUtil.ahoraFechaHoraPeru();
         LocalDateTime fechaLimite = registro.getFecha().atTime(23, 59, 59).plusHours(48);
 
         if (ahora.isAfter(fechaLimite)) {

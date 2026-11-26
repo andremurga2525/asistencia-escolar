@@ -4,6 +4,7 @@ import com.colegio.asistencia.model.*;
 import com.colegio.asistencia.repository.ConfiguracionColegioRepository;
 import com.colegio.asistencia.repository.JustificacionInasistenciaRepository;
 import com.colegio.asistencia.repository.RegistroAsistenciaRepository;
+import com.colegio.asistencia.util.FechaUtil;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -63,10 +64,10 @@ public class AdminReporteController {
             Model model) {
 
         if (desde == null) {
-            desde = LocalDate.now().withDayOfMonth(1); // Primer día del mes
+            desde = FechaUtil.hoyPeru().withDayOfMonth(1); // Primer día del mes
         }
         if (hasta == null) {
-            hasta = LocalDate.now();
+            hasta = FechaUtil.hoyPeru();
         }
 
         EstadoPuntualidad estadoFiltro = null;
@@ -103,8 +104,8 @@ public class AdminReporteController {
             @RequestParam(value = "hasta", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
             @RequestParam(value = "estado", required = false) String estadoStr) {
 
-        if (desde == null) desde = LocalDate.now().withDayOfMonth(1);
-        if (hasta == null) hasta = LocalDate.now();
+        if (desde == null) desde = FechaUtil.hoyPeru().withDayOfMonth(1);
+        if (hasta == null) hasta = FechaUtil.hoyPeru();
 
         EstadoPuntualidad estadoFiltro = null;
         if (estadoStr != null && !estadoStr.trim().isEmpty() && !"TODOS".equalsIgnoreCase(estadoStr)) {
@@ -135,7 +136,7 @@ public class AdminReporteController {
             csv.append("\"").append(r.getObservaciones() != null ? r.getObservaciones().replace("\"", "\"\"") : "").append("\"\n");
         }
 
-        String filename = "Reporte_Asistencias_Jeshua_" + LocalDate.now() + ".csv";
+        String filename = "Reporte_Asistencias_Jeshua_" + FechaUtil.hoyPeru() + ".csv";
         byte[] bytes = csv.toString().getBytes(StandardCharsets.UTF_8);
 
         return ResponseEntity.ok()
