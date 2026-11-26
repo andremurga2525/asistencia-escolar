@@ -43,3 +43,20 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+  # Configuración de Correo Electrónico para Notificaciones a Padres (Gmail SMTP)
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:notificaciones.jeshua@gmail.com}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: false
+        connectiontimeout: 5000
+        timeout: 5000
+        writetimeout: 5000

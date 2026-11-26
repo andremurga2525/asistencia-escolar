@@ -2,7 +2,9 @@ package com.colegio.asistencia.controller;
 
 import com.colegio.asistencia.model.*;
 import com.colegio.asistencia.repository.*;
+import com.colegio.asistencia.service.EmailNotificacionService;
 import com.colegio.asistencia.service.FileStorageService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -27,18 +29,21 @@ public class AdminJustificacionController {
     private final UsuarioRepository usuarioRepository;
     private final ConfiguracionColegioRepository configRepository;
     private final FileStorageService fileStorageService;
+    private final EmailNotificacionService emailService;
 
     public AdminJustificacionController(
             JustificacionInasistenciaRepository justificacionRepository,
             RegistroAsistenciaRepository asistenciaRepository,
             UsuarioRepository usuarioRepository,
             ConfiguracionColegioRepository configRepository,
-            FileStorageService fileStorageService) {
+            FileStorageService fileStorageService,
+            @Autowired(required = false) EmailNotificacionService emailService) {
         this.justificacionRepository = justificacionRepository;
         this.asistenciaRepository = asistenciaRepository;
         this.usuarioRepository = usuarioRepository;
         this.configRepository = configRepository;
         this.fileStorageService = fileStorageService;
+        this.emailService = emailService;
     }
 
     @ModelAttribute
@@ -145,6 +150,12 @@ public class AdminJustificacionController {
         registro.setObservaciones("Inasistencia justificada formalmente. ID Justif: #" + justificacion.getId());
         asistenciaRepository.save(registro);
 
+        if (emailService != null) {
+            try {
+                emailService.notificarResolucionJustificacion(justificacion);
+            } catch (Exception ignored) {}
+        }
+
         flash.addFlashAttribute("success", "Justificación #" + id + " aprobada exitosamente. La asistencia del alumno ha sido actualizada a 'JUSTIFICADA'.");
         return "redirect:/admin/justificaciones/" + id;
     }
@@ -171,6 +182,12 @@ public class AdminJustificacionController {
         justificacion.setRevisadoPor(revisor);
         justificacion.setFechaRevision(LocalDateTime.now());
         justificacionRepository.save(justificacion);
+
+        if (emailService != null) {
+            try {
+                emailService.notificarResolucionJustificacion(justificacion);
+            } catch (Exception ignored) {}
+        }
 
         flash.addFlashAttribute("success", "Justificación #" + id + " rechazada con el motivo especificado.");
         return "redirect:/admin/justificaciones/" + id;

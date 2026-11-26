@@ -25,6 +25,12 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Envío de correos electrónicos a apoderados (Gmail SMTP) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Motor de plantillas Thymeleaf -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

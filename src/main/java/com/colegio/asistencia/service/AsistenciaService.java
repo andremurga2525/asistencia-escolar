@@ -2,6 +2,9 @@ package com.colegio.asistencia.service;
 
 import com.colegio.asistencia.model.*;
 import com.colegio.asistencia.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,12 +16,15 @@ import java.util.*;
 @Service
 public class AsistenciaService {
 
+    private static final Logger log = LoggerFactory.getLogger(AsistenciaService.class);
+
     private final EstudianteRepository estudianteRepository;
     private final MatriculaRepository matriculaRepository;
     private final HorarioEscolarRepository horarioRepository;
     private final RegistroAsistenciaRepository asistenciaRepository;
     private final UsuarioRepository usuarioRepository;
     private final JustificacionInasistenciaRepository justificacionRepository;
+    private final EmailNotificacionService emailService;
 
     public AsistenciaService(
             EstudianteRepository estudianteRepository,
@@ -26,13 +32,15 @@ public class AsistenciaService {
             HorarioEscolarRepository horarioRepository,
             RegistroAsistenciaRepository asistenciaRepository,
             UsuarioRepository usuarioRepository,
-            JustificacionInasistenciaRepository justificacionRepository) {
+            JustificacionInasistenciaRepository justificacionRepository,
+            @Autowired(required = false) EmailNotificacionService emailService) {
         this.estudianteRepository = estudianteRepository;
         this.matriculaRepository = matriculaRepository;
         this.horarioRepository = horarioRepository;
         this.asistenciaRepository = asistenciaRepository;
         this.usuarioRepository = usuarioRepository;
         this.justificacionRepository = justificacionRepository;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -86,7 +94,15 @@ public class AsistenciaService {
         registro.setMinutosTardanza(minutosTardanza);
         registro.setObservaciones("Entrada registrada mediante escaneo QR por auxiliar: " + usernameAuxiliar);
 
-        return asistenciaRepository.save(registro);
+        RegistroAsistencia guardado = asistenciaRepository.save(registro);
+        if (emailService != null) {
+            try {
+                emailService.notificarEntrada(guardado);
+            } catch (Exception e) {
+                log.error("Error al notificar entrada por correo: {}", e.getMessage());
+            }
+        }
+        return guardado;
     }
 
     @Transactional
@@ -102,7 +118,15 @@ public class AsistenciaService {
         }
 
         registro.setHoraSalida(ahora);
-        return asistenciaRepository.save(registro);
+        RegistroAsistencia guardado = asistenciaRepository.save(registro);
+        if (emailService != null) {
+            try {
+                emailService.notificarSalida(guardado);
+            } catch (Exception e) {
+                log.error("Error al notificar salida por correo: {}", e.getMessage());
+            }
+        }
+        return guardado;
     }
 
     @Transactional(readOnly = true)

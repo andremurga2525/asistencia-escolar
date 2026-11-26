@@ -16,6 +16,8 @@ public interface ApoderadoRepository extends JpaRepository<Apoderado, Long> {
 
     Optional<Apoderado> findByUsuarioUsername(String username);
 
+    List<Apoderado> findByEstudiantesId(Long estudianteId);
+
     boolean existsByDni(String dni);
 
     List<Apoderado> findAllByOrderByApellidosAscNombresAsc();

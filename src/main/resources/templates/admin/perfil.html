@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil y Credenciales - I.E.P. Internacional Jeshua</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        .bg-jeshua { background-color: #b91c1c !important; }
+        .text-jeshua { color: #b91c1c !important; }
+        .btn-jeshua { background-color: #b91c1c; color: white; }
+        .btn-jeshua:hover { background-color: #991b1b; color: white; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Navbar compartido del Administrador -->
+    <div th:replace="~{fragments/admin_nav :: navbar('perfil')}"></div>
+
+    <div class="container-fluid px-2 px-sm-3 px-md-4 py-3">
+
+        <!-- Mensajes Flash de Éxito o Error -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-3 mb-sm-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+            <span class="fw-semibold" th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-3 mb-sm-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <span class="fw-semibold" th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Encabezado de la página -->
+        <div class="mb-4">
+            <h3 class="fw-bold text-dark mb-1 fs-4 fs-sm-3">
+                <i class="bi bi-person-badge-fill text-danger me-2"></i> Mi Perfil y Credenciales
+            </h3>
+            <p class="text-muted small mb-0">
+                Administre sus datos personales, modifique su nombre de usuario de acceso y establezca una nueva contraseña segura para el ingreso al sistema.
+            </p>
+        </div>
+
+        <div class="row g-3 g-sm-4">
+
+            <!-- Columna Izquierda: Tarjeta Informativa de la Directora -->
+            <div class="col-12 col-lg-4">
+                <div class="card shadow-sm border-0 rounded-4 p-4 text-center h-100">
+                    <div class="position-relative d-inline-block mx-auto mb-3">
+                        <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 90px; height: 90px;">
+                            <i class="bi bi-person-circle display-4"></i>
+                        </div>
+                        <span class="position-absolute bottom-0 end-0 p-2 bg-success border border-white rounded-circle" title="Cuenta Activa"></span>
+                    </div>
+
+                    <h5 class="fw-bold text-dark mb-1" th:text="${usuario.nombreCompleto}">Director General</h5>
+                    <div class="mb-2">
+                        <span class="badge bg-danger rounded-pill px-3 py-1">ADMINISTRADOR / DIRECCIÓN</span>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        I.E.P. Internacional Jeshua<br>Tumán, Chiclayo
+                    </p>
+
+                    <hr class="my-3">
+
+                    <div class="text-start small">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted"><i class="bi bi-person-fill me-1"></i> Usuario Actual:</span>
+                            <strong class="text-dark font-monospace" th:text="${usuario.username}">admin</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted"><i class="bi bi-envelope-fill me-1"></i> Correo:</span>
+                            <span class="text-truncate text-dark fw-semibold" style="max-width: 170px;" th:text="${usuario.email}">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted"><i class="bi bi-telephone-fill me-1"></i> Teléfono:</span>
+                            <span class="text-dark fw-semibold" th:text="${usuario.telefono != null ? usuario.telefono : 'No registrado'}">-</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning border-0 rounded-3 text-start small mt-3 p-3 mb-0" style="background-color: #fef3c7;">
+                        <i class="bi bi-shield-check text-warning-emphasis me-1 fs-6"></i>
+                        <strong>Seguridad recomendada:</strong> Cambie el usuario predeterminado <code>admin</code> por su nombre o DNI y use una clave personal que no olvide.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Formulario de Actualización de Usuario y Clave -->
+            <div class="col-12 col-lg-8">
+                <div class="card shadow-sm border-0 rounded-4 p-3 p-sm-4">
+                    <h5 class="fw-bold text-dark mb-3 fs-6 fs-sm-5">
+                        <i class="bi bi-sliders2 text-danger me-2"></i> Actualizar Credenciales y Datos
+                    </h5>
+
+                    <form th:action="@{/admin/perfil/actualizar}" method="post">
+                        
+                        <div class="row g-3 mb-3">
+                            <!-- Nombre Completo -->
+                            <div class="col-12 col-md-6">
+                                <label for="nombreCompleto" class="form-label small fw-bold text-dark">Nombre y Apellidos:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-card-heading"></i></span>
+                                    <input type="text" id="nombreCompleto" name="nombreCompleto" class="form-control border-start-0" 
+                                           th:value="${usuario.nombreCompleto}" required>
+                                </div>
+                            </div>
+
+                            <!-- Correo Institucional -->
+                            <div class="col-12 col-md-6">
+                                <label for="email" class="form-label small fw-bold text-dark">Correo Electrónico:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" id="email" name="email" class="form-control border-start-0" 
+                                           th:value="${usuario.email}" required>
+                                </div>
+                            </div>
+
+                            <!-- Teléfono -->
+                            <div class="col-12 col-md-6">
+                                <label for="telefono" class="form-label small fw-bold text-dark">Teléfono / WhatsApp:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-telephone"></i></span>
+                                    <input type="text" id="telefono" name="telefono" class="form-control border-start-0" 
+                                           th:value="${usuario.telefono}" placeholder="+51 974 ...">
+                                </div>
+                            </div>
+
+                            <!-- Nombre de Usuario (Editable) -->
+                            <div class="col-12 col-md-6">
+                                <label for="nuevoUsername" class="form-label small fw-bold text-dark">
+                                    Nombre de Usuario para Login:
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-person-fill-lock"></i></span>
+                                    <input type="text" id="nuevoUsername" name="nuevoUsername" class="form-control border-start-0 fw-bold font-monospace" 
+                                           th:value="${usuario.username}" required placeholder="ej: directora o su DNI">
+                                </div>
+                                <div class="form-text small text-muted">
+                                    Este es el nombre con el que iniciará sesión en la pantalla de bienvenida.
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Sección de Cambio de Contraseña -->
+                        <h6 class="fw-bold text-dark mb-2">
+                            <i class="bi bi-key-fill text-danger me-1"></i> Establecer Nueva Contraseña
+                        </h6>
+                        <p class="text-muted small mb-3">
+                            Si no desea cambiar su contraseña actual, simplemente <strong>deje este campo en blanco</strong>.
+                        </p>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-12 col-md-8">
+                                <label for="nuevaPassword" class="form-label small fw-bold text-dark">Nueva Contraseña:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock-fill"></i></span>
+                                    <input type="password" id="nuevaPassword" name="nuevaPassword" class="form-control border-start-0" 
+                                           placeholder="Escriba su nueva clave secreta (mínimo 4 caracteres)...">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility()" title="Mostrar/Ocultar contraseña">
+                                        <i class="bi bi-eye" id="eyeIcon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="d-flex flex-column flex-sm-row justify-content-end gap-2 pt-2">
+                            <a th:href="@{/admin/dashboard}" class="btn btn-outline-secondary rounded-pill px-4">
+                                <i class="bi bi-arrow-left me-1"></i> Volver al Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-jeshua fw-semibold rounded-pill px-4 shadow-sm">
+                                <i class="bi bi-check-circle-fill me-1"></i> Guardar Cambios en Mi Perfil
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('nuevaPassword');
+            const eyeIcon = document.getElementById('eyeIcon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                eyeIcon.className = 'bi bi-eye-slash';
+            } else {
+                passInput.type = 'password';
+                eyeIcon.className = 'bi bi-eye';
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

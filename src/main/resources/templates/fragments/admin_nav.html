@@ -131,15 +131,20 @@
 
             <!-- Identificación de Usuario Directivo -->
             <div class="px-3 py-2 border-bottom border-secondary border-opacity-25" style="background-color: rgba(255,255,255,0.02);">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="position-relative">
-                        <i class="bi bi-person-circle fs-3 text-danger"></i>
-                        <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-dark rounded-circle"></span>
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2 overflow-hidden">
+                        <div class="position-relative">
+                            <i class="bi bi-person-circle fs-3 text-danger"></i>
+                            <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-dark rounded-circle"></span>
+                        </div>
+                        <div class="overflow-hidden">
+                            <div class="fw-semibold text-white small text-truncate" sec:authentication="name">admin</div>
+                            <span class="badge bg-danger text-white px-2 py-0" style="font-size: 0.68rem;">ADMINISTRADOR</span>
+                        </div>
                     </div>
-                    <div class="overflow-hidden">
-                        <div class="fw-semibold text-white small text-truncate">Panel Directivo</div>
-                        <span class="badge bg-danger text-white px-2 py-0" style="font-size: 0.68rem;">ADMINISTRADOR</span>
-                    </div>
+                    <a th:href="@{/admin/perfil}" class="btn btn-sm btn-outline-secondary border-0 text-white-50 hover-text-white py-1 px-2" title="Editar Mi Perfil y Cambiar Clave">
+                        <i class="bi bi-gear-fill"></i>
+                    </a>
                 </div>
             </div>
 
@@ -190,6 +195,10 @@
                 </a>
 
                 <div class="sidebar-section-title">Sistema y Seguridad</div>
+                <a th:href="@{/admin/perfil}" class="nav-link" th:classappend="${activeTab == 'perfil' ? 'active' : ''}">
+                    <i class="bi bi-person-fill-gear fs-5 text-warning"></i>
+                    <span>Mi Perfil y Clave</span>
+                </a>
                 <a th:href="@{/admin/usuarios}" class="nav-link" th:classappend="${activeTab == 'usuarios' ? 'active' : ''}">
                     <i class="bi bi-shield-lock-fill fs-5"></i>
                     <span>Auxiliares y Permisos</span>
@@ -242,6 +251,10 @@
                     <a th:href="@{/auxiliar/escaner}" class="btn btn-danger btn-sm rounded-pill px-2 px-sm-3 shadow-sm d-inline-flex align-items-center gap-1" title="Abrir Escáner de Códigos QR">
                         <i class="bi bi-camera-fill"></i>
                         <span class="d-none d-sm-inline">Escáner QR</span>
+                    </a>
+                    <a th:href="@{/admin/perfil}" class="btn btn-outline-danger btn-sm rounded-pill px-2 px-sm-3 d-inline-flex align-items-center gap-1" title="Mi Perfil / Cambiar Usuario y Clave">
+                        <i class="bi bi-person-fill-gear"></i>
+                        <span class="d-none d-md-inline">Mi Perfil</span>
                     </a>
                     <a th:href="@{/admin/estudiantes/importar}" class="btn btn-outline-primary btn-sm rounded-pill px-2 px-sm-3 d-inline-flex align-items-center gap-1" title="Migración masiva de estudiantes">
                         <i class="bi bi-cloud-arrow-up-fill"></i>
