@@ -4,6 +4,7 @@ import com.colegio.asistencia.model.ConfiguracionColegio;
 import com.colegio.asistencia.model.EnumEstadoJustificacion;
 import com.colegio.asistencia.repository.ConfiguracionColegioRepository;
 import com.colegio.asistencia.repository.JustificacionInasistenciaRepository;
+import com.colegio.asistencia.service.EmailNotificacionService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -29,12 +30,15 @@ public class AdminConfiguracionController {
 
     private final ConfiguracionColegioRepository configRepository;
     private final JustificacionInasistenciaRepository justificacionRepository;
+    private final EmailNotificacionService emailService;
 
     public AdminConfiguracionController(
             ConfiguracionColegioRepository configRepository,
-            JustificacionInasistenciaRepository justificacionRepository) {
+            JustificacionInasistenciaRepository justificacionRepository,
+            EmailNotificacionService emailService) {
         this.configRepository = configRepository;
         this.justificacionRepository = justificacionRepository;
+        this.emailService = emailService;
     }
 
     @ModelAttribute
@@ -80,12 +84,29 @@ public class AdminConfiguracionController {
         existente.setDireccion(configForm.getDireccion());
         existente.setTelefono(configForm.getTelefono());
         existente.setEmail(configForm.getEmail());
-        existente.setColorPrimario(configForm.getColorPrimario());
-        existente.setColorSecundario(configForm.getColorSecundario());
+
+        // Sanitizar colores hex para evitar truncamiento por duplicación de campos
+        if (configForm.getColorPrimario() != null) {
+            String c = configForm.getColorPrimario().split(",")[0].trim();
+            existente.setColorPrimario(c);
+        }
+        if (configForm.getColorSecundario() != null) {
+            String c = configForm.getColorSecundario().split(",")[0].trim();
+            existente.setColorSecundario(c);
+        }
+
+        // Configuración de Notificaciones por Correo (Gmail SMTP)
+        existente.setEmailNotificaciones(configForm.getEmailNotificaciones());
+        if (configForm.getEmailPassword() != null && !configForm.getEmailPassword().trim().isEmpty()) {
+            existente.setEmailPassword(configForm.getEmailPassword().trim());
+        }
+        existente.setEmailActivo(configForm.getEmailActivo() != null ? configForm.getEmailActivo() : true);
 
         // Manejar subida o eliminación de imagen de logotipo
         if (quitarLogo) {
             existente.setLogoUrl(null);
+            existente.setLogoData(null);
+            existente.setLogoMimeType(null);
             try {
                 Path dir = Paths.get("uploads/colegio").toAbsolutePath().normalize();
                 if (Files.exists(dir)) {
@@ -98,27 +119,29 @@ public class AdminConfiguracionController {
             } catch (Exception ignored) {}
         } else if (archivoLogo != null && !archivoLogo.isEmpty()) {
             try {
-                String originalName = archivoLogo.getOriginalFilename() != null ? archivoLogo.getOriginalFilename() : "logo.png";
-                String ext = ".png";
-                int dot = originalName.lastIndexOf('.');
-                if (dot > 0) {
-                    ext = originalName.substring(dot).toLowerCase();
-                }
-
-                Path dir = Paths.get("uploads/colegio").toAbsolutePath().normalize();
-                Files.createDirectories(dir);
-
-                // Limpiar logos anteriores para no acumular archivos
-                try (var stream = Files.list(dir)) {
-                    stream.forEach(p -> {
-                        try { Files.deleteIfExists(p); } catch (Exception ignored) {}
-                    });
-                }
-
-                Path destino = dir.resolve("logo_institucional" + ext);
-                Files.copy(archivoLogo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
-
+                byte[] bytes = archivoLogo.getBytes();
+                existente.setLogoData(bytes);
+                existente.setLogoMimeType(archivoLogo.getContentType());
                 existente.setLogoUrl("/logo-colegio?v=" + System.currentTimeMillis());
+
+                // Guardar también una copia local en disco como respaldo
+                try {
+                    String originalName = archivoLogo.getOriginalFilename() != null ? archivoLogo.getOriginalFilename() : "logo.png";
+                    String ext = ".png";
+                    int dot = originalName.lastIndexOf('.');
+                    if (dot > 0) ext = originalName.substring(dot).toLowerCase();
+
+                    Path dir = Paths.get("uploads/colegio").toAbsolutePath().normalize();
+                    Files.createDirectories(dir);
+                    try (var stream = Files.list(dir)) {
+                        stream.forEach(p -> {
+                            try { Files.deleteIfExists(p); } catch (Exception ignored) {}
+                        });
+                    }
+                    Path destino = dir.resolve("logo_institucional" + ext);
+                    Files.copy(archivoLogo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
+                } catch (Exception ignored) {}
+
             } catch (Exception e) {
                 flash.addFlashAttribute("error", "Error al procesar la imagen del logotipo: " + e.getMessage());
                 return "redirect:/admin/configuracion";
@@ -128,7 +151,21 @@ public class AdminConfiguracionController {
         }
 
         configRepository.save(existente);
-        flash.addFlashAttribute("success", "Identidad institucional actualizada exitosamente.");
+        flash.addFlashAttribute("success", "Identidad institucional y configuración actualizada exitosamente.");
+        return "redirect:/admin/configuracion";
+    }
+
+    @PostMapping("/probar-correo")
+    public String probarEnvioCorreo(
+            @RequestParam(value = "emailDestino", defaultValue = "murgaalexander2@gmail.com") String emailDestino,
+            RedirectAttributes flash) {
+        try {
+            emailService.enviarCorreoPrueba(emailDestino);
+            flash.addFlashAttribute("success", "¡Excelente! Correo de prueba enviado con éxito a " + emailDestino + ". Revisa tu bandeja de entrada o spam.");
+        } catch (Exception e) {
+            flash.addFlashAttribute("error", "No se pudo enviar el correo de prueba: " + e.getMessage() 
+                    + ". Asegúrate de ingresar tu correo Gmail y la Contraseña de Aplicación de 16 letras generada en tu cuenta de Google.");
+        }
         return "redirect:/admin/configuracion";
     }
 }

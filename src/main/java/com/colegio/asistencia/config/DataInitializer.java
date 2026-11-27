@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
@@ -21,6 +22,7 @@ public class DataInitializer {
 
     @Bean
     public CommandLineRunner initDatabase(
+            JdbcTemplate jdbcTemplate,
             ConfiguracionColegioRepository configuracionRepository,
             RolRepository rolRepository,
             UsuarioRepository usuarioRepository,
@@ -37,6 +39,13 @@ public class DataInitializer {
             RegistroAsistenciaRepository asistenciaRepository,
             JustificacionInasistenciaRepository justificacionRepository) {
         return args -> {
+            // Asegurar que las columnas en MySQL permitan valores ampliados (evita Data truncation)
+            try {
+                jdbcTemplate.execute("ALTER TABLE configuracion_colegio MODIFY COLUMN color_primario VARCHAR(50)");
+                jdbcTemplate.execute("ALTER TABLE configuracion_colegio MODIFY COLUMN color_secundario VARCHAR(50)");
+                jdbcTemplate.execute("ALTER TABLE configuracion_colegio MODIFY COLUMN logo_url TEXT");
+            } catch (Exception ignored) {}
+
             // 1. Configuracion Institucional: I.E.P. Internacional Jeshua (Tuman)
             if (configuracionRepository.count() == 0) {
                 log.info("Inicializando configuracion institucional de I.E.P. Internacional Jeshua...");
@@ -145,18 +154,28 @@ public class DataInitializer {
             // Apoderado Principal: Juan Carlos Quispe Flores (DNI: 10234567 / clave: padre123)
             String dniPadre = "10234567";
             Usuario usuarioPadre = usuarioRepository.findByUsername(dniPadre).orElseGet(() -> {
-                Usuario u = new Usuario(dniPadre, passwordEncoder.encode("padre123"), "Juan Quispe Flores (Padre)", "padre.quispe@gmail.com");
+                Usuario u = new Usuario(dniPadre, passwordEncoder.encode("padre123"), "Juan Quispe Flores (Padre)", "murgaalexander2@gmail.com");
                 u.setTelefono("+51 974 555 666");
                 if (rolPadre != null) u.agregarRol(rolPadre);
                 return usuarioRepository.save(u);
             });
+            // Si ya existía de ejecuciones previas, asegurar que su correo sea el especificado para pruebas
+            if (usuarioPadre != null && !"murgaalexander2@gmail.com".equalsIgnoreCase(usuarioPadre.getEmail())) {
+                usuarioPadre.setEmail("murgaalexander2@gmail.com");
+                usuarioRepository.save(usuarioPadre);
+            }
 
             Apoderado padreQuispe = apoderadoRepository.findByDni(dniPadre).orElseGet(() -> {
                 Apoderado a = new Apoderado(dniPadre, "Juan Carlos", "Quispe Flores", "PADRE", "+51 974 555 666");
                 a.setDireccion("Calle San Martin 145, Tuman");
+                a.setEmail("murgaalexander2@gmail.com");
                 a.setUsuario(usuarioPadre);
                 return apoderadoRepository.save(a);
             });
+            if (padreQuispe != null && !"murgaalexander2@gmail.com".equalsIgnoreCase(padreQuispe.getEmail())) {
+                padreQuispe.setEmail("murgaalexander2@gmail.com");
+                apoderadoRepository.save(padreQuispe);
+            }
 
             // Hijos para Juan Quispe (Lucas, Mateo, Thiago, Camila, Joaquin, Rodrigo)
             Estudiante lucas = asegurarEstudiante(estudianteRepository, "71234567", "Lucas", "Quispe Mendoza", "M", "Calle San Martin 145, Tuman");

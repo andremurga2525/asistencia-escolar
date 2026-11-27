@@ -53,11 +53,8 @@
                 <!-- Encabezado con identidad del colegio Internacional Jeshua de Tumán -->
                 <div class="login-header">
                     <div class="mb-2">
-                        <img th:if="${colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl)}" 
-                             th:src="${colegio.logoUrl}" 
+                        <img th:src="@{/logo-colegio}" 
                              alt="Logo" class="img-fluid rounded-3 mb-2 shadow-sm" style="max-height: 75px; max-width: 140px; object-fit: contain; background: white; padding: 4px;">
-                        <i th:unless="${colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl)}" 
-                           class="bi bi-mortarboard-fill display-4 text-warning"></i>
                     </div>
                     <h3 class="fw-bold mb-1" th:text="${colegio.nombreColegio}">I.E.P. Internacional Jeshua</h3>
                     <p class="text-white-50 small mb-0 fst-italic" th:text="${colegio.lema}">Instruye al niño en su camino</p>

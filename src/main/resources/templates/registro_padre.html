@@ -64,11 +64,8 @@
                 <!-- Encabezado Institucional -->
                 <div class="register-header">
                     <div class="mb-2">
-                        <img th:if="${colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl)}" 
-                             th:src="${colegio.logoUrl}" 
+                        <img th:src="@{/logo-colegio}" 
                              alt="Logo" class="img-fluid rounded-3 mb-2 shadow-sm" style="max-height: 70px; max-width: 130px; object-fit: contain; background: white; padding: 4px;">
-                        <i th:unless="${colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl)}" 
-                           class="bi bi-person-heart display-5 text-warning"></i>
                     </div>
                     <h3 class="fw-bold mb-1" th:text="${colegio.nombreColegio}">I.E.P. Internacional Jeshua</h3>
                     <p class="text-white-50 small mb-0">Portal de Acceso para Padres y Apoderados</p>

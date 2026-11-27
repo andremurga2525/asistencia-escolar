@@ -91,10 +91,12 @@
             <!-- Encabezado con Identidad Institucional -->
             <div class="fotocheck-header">
                 <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
-                    <i class="bi bi-mortarboard-fill fs-3 text-warning"></i>
-                    <h5 class="fw-bold mb-0 text-white" th:text="${configColegio.nombreColegio}">I.E.P. Internacional Jeshua</h5>
+                    <img th:src="@{/logo-colegio}" 
+                         alt="Escudo Oficial" 
+                         style="max-height: 42px; max-width: 42px; object-fit: contain; background: white; border-radius: 8px; padding: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    <h5 class="fw-bold mb-0 text-white" th:text="${colegio != null ? colegio.nombreColegio : (configColegio != null ? configColegio.nombreColegio : 'I.E.P. Internacional Jeshua')}">I.E.P. Internacional Jeshua</h5>
                 </div>
-                <small class="text-white-50 text-uppercase letter-spacing-1 d-block" style="font-size: 0.72rem;">
+                <small class="text-white-50 text-uppercase letter-spacing-1 d-block" style="font-size: 0.72rem;" th:text="${colegio != null ? colegio.direccion : (configColegio != null ? configColegio.direccion : 'Tumán - Chiclayo - Lambayeque')}">
                     Tumán - Chiclayo - Lambayeque
                 </small>
                 <span class="badge bg-warning text-dark fw-bold rounded-pill px-3 py-1 mt-2">

@@ -34,14 +34,30 @@ public class ConfiguracionColegio {
     @Column(name = "email", length = 100)
     private String email;
 
-    @Column(name = "logo_url", length = 255)
+    @Column(name = "logo_url", columnDefinition = "TEXT")
     private String logoUrl;
 
-    @Column(name = "color_primario", length = 20)
+    @Lob
+    @Column(name = "logo_data", columnDefinition = "LONGBLOB")
+    private byte[] logoData;
+
+    @Column(name = "logo_mime_type", length = 50)
+    private String logoMimeType;
+
+    @Column(name = "color_primario", length = 50)
     private String colorPrimario;
 
-    @Column(name = "color_secundario", length = 20)
+    @Column(name = "color_secundario", length = 50)
     private String colorSecundario;
+
+    @Column(name = "email_notificaciones", length = 100)
+    private String emailNotificaciones;
+
+    @Column(name = "email_password", length = 100)
+    private String emailPassword;
+
+    @Column(name = "email_activo")
+    private Boolean emailActivo = true;
 
     @Column(name = "activo", nullable = false)
     private Boolean activo;
@@ -51,8 +67,9 @@ public class ConfiguracionColegio {
 
     public ConfiguracionColegio() {
         this.activo = true;
-        this.colorPrimario = "#0d6efd";
-        this.colorSecundario = "#6c757d";
+        this.colorPrimario = "#b91c1c";
+        this.colorSecundario = "#ffffff";
+        this.emailActivo = true;
         this.fechaActualizacion = LocalDateTime.now();
     }
 
@@ -128,6 +145,22 @@ public class ConfiguracionColegio {
         this.logoUrl = logoUrl;
     }
 
+    public byte[] getLogoData() {
+        return logoData;
+    }
+
+    public void setLogoData(byte[] logoData) {
+        this.logoData = logoData;
+    }
+
+    public String getLogoMimeType() {
+        return logoMimeType;
+    }
+
+    public void setLogoMimeType(String logoMimeType) {
+        this.logoMimeType = logoMimeType;
+    }
+
     public String getColorPrimario() {
         return colorPrimario;
     }
@@ -142,6 +175,30 @@ public class ConfiguracionColegio {
 
     public void setColorSecundario(String colorSecundario) {
         this.colorSecundario = colorSecundario;
+    }
+
+    public String getEmailNotificaciones() {
+        return emailNotificaciones;
+    }
+
+    public void setEmailNotificaciones(String emailNotificaciones) {
+        this.emailNotificaciones = emailNotificaciones;
+    }
+
+    public String getEmailPassword() {
+        return emailPassword;
+    }
+
+    public void setEmailPassword(String emailPassword) {
+        this.emailPassword = emailPassword;
+    }
+
+    public Boolean getEmailActivo() {
+        return emailActivo;
+    }
+
+    public void setEmailActivo(Boolean emailActivo) {
+        this.emailActivo = emailActivo;
     }
 
     public Boolean getActivo() {

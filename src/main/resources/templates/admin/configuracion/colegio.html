@@ -33,8 +33,9 @@
         </div>
 
         <div class="row justify-content-center">
-            <div class="col-lg-8">
+            <div class="col-lg-9">
                 
+                <!-- Tarjeta Principal: Configuración Institucional -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
                         <div class="d-flex align-items-center justify-content-between">
@@ -43,7 +44,7 @@
                                     <i class="bi bi-gear-fill text-jeshua me-2"></i> Personalización de la Institución Educativa
                                 </h4>
                                 <p class="text-muted small mb-0">
-                                    Ajuste los datos oficiales, nombre, lema y colores distintivos de I.E.P. Internacional Jeshua.
+                                    Ajuste los datos oficiales, nombre, lema, colores distintivos, logotipo y correo emisor para notificaciones a padres.
                                 </p>
                             </div>
                         </div>
@@ -53,7 +54,10 @@
                     <div class="card-body p-4">
                         <form th:action="@{/admin/configuracion/guardar}" th:object="${configuracion}" method="post" enctype="multipart/form-data">
 
-                            <h5 class="fw-bold text-secondary mb-3 fs-6 text-uppercase">1. Datos Institucionales</h5>
+                            <!-- 1. DATOS INSTITUCIONALES -->
+                            <h5 class="fw-bold text-secondary mb-3 fs-6 text-uppercase">
+                                <i class="bi bi-building me-1 text-danger"></i> 1. Datos Institucionales
+                            </h5>
                             <div class="row g-3 mb-4">
                                 <div class="col-md-12">
                                     <label for="nombreColegio" class="form-label fw-semibold">Nombre Oficial del Colegio <span class="text-danger">*</span></label>
@@ -82,50 +86,56 @@
                                 </div>
                             </div>
 
-                            <h5 class="fw-bold text-secondary mb-3 fs-6 text-uppercase">2. Identidad Visual y Colores</h5>
+                            <!-- 2. IDENTIDAD VISUAL Y COLORES -->
+                            <h5 class="fw-bold text-secondary mb-3 fs-6 text-uppercase">
+                                <i class="bi bi-palette-fill me-1 text-danger"></i> 2. Identidad Visual y Colores
+                            </h5>
                             <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label for="colorPrimario" class="form-label fw-semibold">Color Primario Institucional</label>
                                     <div class="input-group">
-                                        <input type="color" class="form-control form-control-color" id="colorPrimario" th:field="*{colorPrimario}" title="Seleccione color">
-                                        <input type="text" class="form-control font-monospace" th:field="*{colorPrimario}">
+                                        <input type="color" class="form-control form-control-color" id="colorPrimarioPicker" 
+                                               th:value="*{colorPrimario != null ? colorPrimario : '#b91c1c'}" title="Seleccione color">
+                                        <input type="text" class="form-control font-monospace" id="colorPrimario" 
+                                               th:field="*{colorPrimario}" maxlength="20">
                                     </div>
-                                    <div class="form-text small">Color característico: Rojo (#b91c1c)</div>
+                                    <div class="form-text small">Color representativo: Rojo (#b91c1c)</div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="colorSecundario" class="form-label fw-semibold">Color Secundario</label>
                                     <div class="input-group">
-                                        <input type="color" class="form-control form-control-color" id="colorSecundario" th:field="*{colorSecundario}" title="Seleccione color">
-                                        <input type="text" class="form-control font-monospace" th:field="*{colorSecundario}">
+                                        <input type="color" class="form-control form-control-color" id="colorSecundarioPicker" 
+                                               th:value="*{colorSecundario != null ? colorSecundario : '#ffffff'}" title="Seleccione color">
+                                        <input type="text" class="form-control font-monospace" id="colorSecundario" 
+                                               th:field="*{colorSecundario}" maxlength="20">
                                     </div>
+                                    <div class="form-text small">Color de contraste secundario.</div>
                                 </div>
 
                                 <div class="col-md-12">
                                     <label class="form-label fw-semibold d-block">Logotipo / Escudo del Colegio</label>
                                     
-                                    <!-- Vista previa del logotipo actual -->
+                                    <!-- Vista previa del logotipo actual desde el endpoint permanente -->
                                     <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 border mb-3">
-                                        <div class="p-2 bg-white rounded border d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                        <div class="p-2 bg-white rounded border d-flex align-items-center justify-content-center shadow-sm" style="width: 86px; height: 86px;">
                                             <img id="previewLogoImg" 
-                                                 th:if="${configuracion.logoUrl != null and !#strings.isEmpty(configuracion.logoUrl)}" 
-                                                 th:src="${configuracion.logoUrl}" 
+                                                 th:src="@{/logo-colegio}" 
                                                  alt="Logo del Colegio" 
-                                                 style="max-width: 64px; max-height: 64px; object-fit: contain;">
-                                            <i id="previewIcon" 
-                                               th:unless="${configuracion.logoUrl != null and !#strings.isEmpty(configuracion.logoUrl)}" 
-                                               class="bi bi-mortarboard-fill text-warning fs-1"></i>
+                                                 style="max-width: 72px; max-height: 72px; object-fit: contain;">
                                         </div>
                                         <div>
-                                            <div class="fw-bold small text-dark mb-1">Imagen del Escudo Oficial</div>
+                                            <div class="fw-bold small text-dark mb-1">Imagen del Escudo Oficial en Pantalla</div>
                                             <div class="text-muted small mb-2">
-                                                <span th:if="${configuracion.logoUrl != null and !#strings.isEmpty(configuracion.logoUrl)}" class="badge bg-success-subtle text-success border border-success-subtle">Logo Personalizado Activo</span>
-                                                <span th:unless="${configuracion.logoUrl != null and !#strings.isEmpty(configuracion.logoUrl)}" class="badge bg-secondary-subtle text-secondary border">Sin Logo (Usa birrete dorado)</span>
+                                                <span th:if="${configuracion.logoData != null or (configuracion.logoUrl != null and !#strings.isEmpty(configuracion.logoUrl))}" 
+                                                      class="badge bg-success-subtle text-success border border-success-subtle">Logo Activo</span>
+                                                <span th:unless="${configuracion.logoData != null or (configuracion.logoUrl != null and !#strings.isEmpty(configuracion.logoUrl))}" 
+                                                      class="badge bg-secondary-subtle text-secondary border">Usando Escudo Oficial Vectorial</span>
                                             </div>
-                                            <div th:if="${configuracion.logoUrl != null and !#strings.isEmpty(configuracion.logoUrl)}" class="form-check form-check-inline small">
+                                            <div class="form-check form-check-inline small">
                                                 <input class="form-check-input" type="checkbox" id="quitarLogo" name="quitarLogo" value="true">
                                                 <label class="form-check-label text-danger fw-semibold" for="quitarLogo">
-                                                    <i class="bi bi-trash3 me-1"></i> Quitar logotipo actual y volver al icono original
+                                                    <i class="bi bi-trash3 me-1"></i> Quitar imagen personalizada y volver al escudo base
                                                 </label>
                                             </div>
                                         </div>
@@ -139,17 +149,60 @@
                                         <input type="file" class="form-control" id="archivoLogo" name="archivoLogo" 
                                                accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
                                                onchange="mostrarVistaPrevia(this)">
-                                        <div class="form-text small">Formatos compatibles: PNG, JPG, JPEG o WEBP (Recomendado fondo transparente).</div>
+                                        <div class="form-text small">Formatos compatibles: PNG, JPG, JPEG o WEBP (Recomendado fondo transparente). La imagen se guarda en la base de datos para no perderse en reinicios de Railway.</div>
                                     </div>
 
                                     <!-- Opcional: Escribir link o URL de internet -->
                                     <div class="collapse" id="collapseUrl">
-                                        <label for="logoUrl" class="form-label small fw-semibold text-muted">O ingresar enlace web (URL):</label>
+                                        <label for="logoUrl" class="form-label small fw-semibold text-muted">O ingresar enlace web directo (URL):</label>
                                         <input type="text" class="form-control form-control-sm" id="logoUrl" th:field="*{logoUrl}" placeholder="https://ejemplo.com/logo.png">
                                     </div>
                                     <button class="btn btn-link btn-sm text-decoration-none p-0 mt-1 small" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUrl">
                                         <i class="bi bi-link-45deg me-1"></i> ¿Prefiere ingresar un enlace web o URL de internet? Haga clic aquí
                                     </button>
+                                </div>
+                            </div>
+
+                            <!-- 3. CONFIGURACIÓN DE CORREO ELECTRÓNICO (GMAIL) -->
+                            <h5 class="fw-bold text-secondary mb-3 fs-6 text-uppercase">
+                                <i class="bi bi-envelope-at-fill me-1 text-danger"></i> 3. Notificaciones por Correo Electrónico (Gmail)
+                            </h5>
+                            <div class="p-3 bg-white rounded-3 border mb-4">
+                                <p class="text-muted small mb-3">
+                                    Configure la cuenta de Gmail desde la cual el colegio enviará las alertas automáticas de ingreso, salida y justificaciones a los apoderados.
+                                </p>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="emailNotificaciones" class="form-label fw-semibold">Correo Emisor (Gmail)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-envelope-fill text-danger"></i></span>
+                                            <input type="email" class="form-control" id="emailNotificaciones" th:field="*{emailNotificaciones}" 
+                                                   placeholder="micolegio@gmail.com">
+                                        </div>
+                                        <div class="form-text small">Cuenta Google que enviará las alertas a los padres.</div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="emailPassword" class="form-label fw-semibold">Contraseña de Aplicación de Google (16 letras)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-key-fill text-warning"></i></span>
+                                            <input type="password" class="form-control font-monospace" id="emailPassword" th:field="*{emailPassword}" 
+                                                   placeholder="•••• •••• •••• ••••" autocomplete="off">
+                                        </div>
+                                        <div class="form-text small">
+                                            Generada en: <em>Mi Cuenta Google &gt; Seguridad &gt; Verificación en 2 pasos &gt; Contraseñas de aplicaciones</em>.
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="form-check form-switch mt-2">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="emailActivo" th:field="*{emailActivo}">
+                                            <label class="form-check-label fw-semibold text-dark" for="emailActivo">
+                                                Habilitar envío automático de correos a los padres al escanear en puerta
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -166,31 +219,74 @@
                     </div>
                 </div>
 
+                <!-- Tarjeta Secundaria: Prueba Inmediata de Envío de Correo a Padres -->
+                <div class="card border-0 shadow-sm border-start border-4 border-danger">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h5 class="fw-bold text-dark mb-0">
+                                <i class="bi bi-send-check-fill text-danger me-2"></i> Probar Envío de Correo a Apoderado (Gmail)
+                            </h5>
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">Prueba en Vivo</span>
+                        </div>
+                        <p class="text-muted small mb-3">
+                            Verifique que la plantilla de correo con el <strong>logotipo del colegio</strong>, formato institucional y sellos de tiempo de Perú llegue con éxito a su bandeja de entrada.
+                        </p>
+
+                        <form th:action="@{/admin/configuracion/probar-correo}" method="post" class="row g-2 align-items-center">
+                            <div class="col-12 col-sm-8">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person-check-fill"></i></span>
+                                    <input type="email" class="form-control" name="emailDestino" value="murgaalexander2@gmail.com" 
+                                           placeholder="Ingrese correo para recibir la prueba..." required>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <button type="submit" class="btn btn-dark w-100 fw-semibold shadow-sm">
+                                    <i class="bi bi-send-fill me-1 text-warning"></i> Enviar Correo de Prueba
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Sincronización bidireccional de colores
+        const pickerPrimario = document.getElementById('colorPrimarioPicker');
+        const textPrimario = document.getElementById('colorPrimario');
+        if (pickerPrimario && textPrimario) {
+            pickerPrimario.addEventListener('input', function() { textPrimario.value = this.value; });
+            textPrimario.addEventListener('input', function() {
+                if (/^#[0-9A-Fa-f]{6}$/.test(this.value.trim())) {
+                    pickerPrimario.value = this.value.trim();
+                }
+            });
+        }
+
+        const pickerSecundario = document.getElementById('colorSecundarioPicker');
+        const textSecundario = document.getElementById('colorSecundario');
+        if (pickerSecundario && textSecundario) {
+            pickerSecundario.addEventListener('input', function() { textSecundario.value = this.value; });
+            textSecundario.addEventListener('input', function() {
+                if (/^#[0-9A-Fa-f]{6}$/.test(this.value.trim())) {
+                    pickerSecundario.value = this.value.trim();
+                }
+            });
+        }
+
+        // Vista previa instantánea al seleccionar archivo de imagen
         function mostrarVistaPrevia(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     let img = document.getElementById('previewLogoImg');
-                    const icon = document.getElementById('previewIcon');
-                    if (!img) {
-                        img = document.createElement('img');
-                        img.id = 'previewLogoImg';
-                        img.style.maxWidth = '64px';
-                        img.style.maxHeight = '64px';
-                        img.style.objectFit = 'contain';
-                        if (icon && icon.parentNode) {
-                            icon.parentNode.appendChild(img);
-                        }
+                    if (img) {
+                        img.src = e.target.result;
                     }
-                    if (icon) icon.style.display = 'none';
-                    img.src = e.target.result;
-                    img.style.display = 'block';
                 };
                 reader.readAsDataURL(input.files[0]);
             }

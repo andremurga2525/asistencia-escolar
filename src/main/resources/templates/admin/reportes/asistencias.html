@@ -11,28 +11,82 @@
         .text-jeshua { color: #b91c1c !important; }
         .btn-jeshua { background-color: #b91c1c; color: white; }
         .btn-jeshua:hover { background-color: #991b1b; color: white; }
+
+        @media print {
+            .d-print-none, .admin-sidebar, header, nav, .sidebar-backdrop {
+                display: none !important;
+            }
+            body {
+                background-color: #ffffff !important;
+                padding-left: 0 !important;
+                font-size: 11pt;
+            }
+            .container {
+                max-width: 100% !important;
+                width: 100% !important;
+                padding: 0 !important;
+            }
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .table {
+                border: 1px solid #000 !important;
+            }
+            .table th, .table td {
+                border-color: #dee2e6 !important;
+                padding: 6px 8px !important;
+            }
+            .badge {
+                border: 1px solid #000 !important;
+                color: #000 !important;
+                background: transparent !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-light">
 
-    <!-- Navbar compartido -->
-    <div th:replace="~{fragments/admin_nav :: navbar('reportes')}"></div>
+    <!-- Navbar compartido (Oculto al imprimir) -->
+    <div class="d-print-none" th:replace="~{fragments/admin_nav :: navbar('reportes')}"></div>
 
     <div class="container py-4">
 
-        <!-- Encabezado -->
-        <div class="card border-0 shadow-sm mb-4">
+        <!-- Encabezado Institucional Exclusivo para Impresión Oficial -->
+        <div class="d-none d-print-block mb-4 pb-3 border-bottom border-2 border-dark">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <img th:src="@{/logo-colegio}" alt="Logo" style="max-height: 70px; max-width: 70px; object-fit: contain;">
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark" th:text="${colegio != null ? colegio.nombreColegio : 'I.E.P. Internacional Jeshua'}">I.E.P. Internacional Jeshua</h4>
+                        <div class="small text-muted" th:text="${colegio != null ? colegio.lema : 'Instruye al niño en su camino...'}">Instruye al niño en su camino</div>
+                        <div class="small text-muted" th:text="${colegio != null ? colegio.direccion : 'Tumán, Chiclayo, Lambayeque'}">Tumán, Chiclayo</div>
+                    </div>
+                </div>
+                <div class="text-end small">
+                    <div class="fw-bold">REPORTE CONSOLIDADO DE ASISTENCIA</div>
+                    <div>Fecha Emisión: <span th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy HH:mm')}">26/11/2026</span></div>
+                    <div>Filtro: <span th:text="${desde}">01/10/2026</span> al <span th:text="${hasta}">26/10/2026</span> (<span th:text="${estadoFiltro}">TODOS</span>)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Encabezado en pantalla -->
+        <div class="card border-0 shadow-sm mb-4 d-print-none">
             <div class="card-body p-4">
                 <div class="row align-items-center g-3">
-                    <div class="col-md-7">
+                    <div class="col-md-6">
                         <h4 class="fw-bold mb-1 text-dark">
                             <i class="bi bi-file-earmark-bar-graph-fill text-jeshua me-2"></i> Reportes y Estadísticas de Asistencia
                         </h4>
                         <p class="text-muted small mb-0">
-                            Filtre por rango de fechas y estado de puntualidad con exportación directa a formato Excel / CSV.
+                            Filtre por rango de fechas y estado de puntualidad con exportación directa a formato Excel / CSV o impresión oficial.
                         </p>
                     </div>
-                    <div class="col-md-5 text-md-end">
+                    <div class="col-md-6 text-md-end">
+                        <button onclick="window.print()" class="btn btn-outline-dark fw-semibold rounded-pill px-3 shadow-sm me-2">
+                            <i class="bi bi-printer-fill me-1 text-danger"></i> Imprimir Reporte
+                        </button>
                         <a th:href="@{/admin/reportes/exportar/csv(desde=${desde}, hasta=${hasta}, estado=${estadoFiltro})}" 
                            class="btn btn-success fw-semibold rounded-pill px-4 shadow-sm">
                             <i class="bi bi-file-earmark-excel-fill me-1"></i> Exportar a Excel (CSV)
@@ -167,6 +221,24 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Bloque de Firmas para Impresión -->
+        <div class="d-none d-print-block mt-5 pt-5">
+            <div class="row text-center">
+                <div class="col-6">
+                    <div class="border-top border-dark mx-4 pt-2">
+                        <strong>Dirección General</strong><br>
+                        <span class="small text-muted" th:text="${colegio != null ? colegio.nombreColegio : 'I.E.P. Internacional Jeshua'}">I.E.P. Internacional Jeshua</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="border-top border-dark mx-4 pt-2">
+                        <strong>Auxiliar / Control de Asistencia</strong><br>
+                        <span class="small text-muted">Módulo de Control Puerta</span>
+                    </div>
+                </div>
             </div>
         </div>
 

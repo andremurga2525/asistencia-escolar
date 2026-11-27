@@ -108,12 +108,9 @@
             <div class="p-3 border-bottom border-secondary border-opacity-25" style="background-color: #0f172a;">
                 <div class="d-flex align-items-center justify-content-between">
                     <a th:href="@{/admin/dashboard}" class="text-white text-decoration-none d-flex align-items-center gap-2">
-                        <div class="rounded-3 d-flex align-items-center justify-content-center p-1" style="background-color: var(--jeshua-red); min-width: 36px; min-height: 36px;">
-                            <img th:if="${(configColegio != null and configColegio.logoUrl != null and !#strings.isEmpty(configColegio.logoUrl)) or (colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl))}" 
-                                 th:src="${configColegio != null and configColegio.logoUrl != null ? configColegio.logoUrl : colegio.logoUrl}" 
+                        <div class="rounded-3 d-flex align-items-center justify-content-center p-1 bg-white shadow-sm flex-shrink-0" style="min-width: 36px; min-height: 36px;">
+                            <img th:src="@{/logo-colegio}" 
                                  alt="Logo" style="max-height: 28px; max-width: 28px; object-fit: contain;">
-                            <i th:unless="${(configColegio != null and configColegio.logoUrl != null and !#strings.isEmpty(configColegio.logoUrl)) or (colegio != null and colegio.logoUrl != null and !#strings.isEmpty(colegio.logoUrl))}" 
-                               class="bi bi-mortarboard-fill text-warning fs-5"></i>
                         </div>
                         <div>
                             <div class="fw-bold lh-1 text-truncate" style="max-width: 170px; font-size: 0.95rem;" 
@@ -236,10 +233,10 @@
                     <button class="btn btn-light border d-lg-none flex-shrink-0" type="button" onclick="toggleSidebar()" aria-label="Abrir Menú" style="padding: 0.35rem 0.6rem;">
                         <i class="bi bi-list fs-5"></i>
                     </button>
-                    <div class="text-truncate">
+                    <div class="text-truncate d-flex align-items-center gap-2">
+                        <img th:src="@{/logo-colegio}" alt="Logo" class="rounded bg-white p-1 border shadow-sm flex-shrink-0" style="width: 28px; height: 28px; object-fit: contain;">
                         <span class="badge bg-danger-subtle text-danger fw-bold border border-danger-subtle px-2 py-1 text-truncate">
-                            <i class="bi bi-building me-1"></i>
-                            <span class="d-none d-sm-inline">I.E.P. Internacional Jeshua</span>
+                            <span class="d-none d-sm-inline" th:text="${colegio != null ? colegio.nombreColegio : 'I.E.P. Internacional Jeshua'}">I.E.P. Internacional Jeshua</span>
                             <span class="d-inline d-sm-none">I.E.P. Jeshua</span>
                         </span>
                         <span class="text-muted small ms-2 d-none d-lg-inline">Sistema Integrado de Asistencia Escolar</span>
