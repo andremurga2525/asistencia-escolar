@@ -4,6 +4,9 @@ import com.colegio.asistencia.model.*;
 import com.colegio.asistencia.repository.*;
 import com.colegio.asistencia.service.FileStorageService;
 import com.colegio.asistencia.util.FechaUtil;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -27,6 +30,10 @@ public class PadreController {
     private final ConfiguracionColegioRepository configuracionRepository;
     private final FileStorageService fileStorageService;
     private final EstudianteRepository estudianteRepository;
+    private final MatriculaRepository matriculaRepository;
+    private final TareaEscolarRepository tareaRepository;
+    private final ComunicadoAulaRepository comunicadoRepository;
+    private final ReporteConductaRepository reporteConductaRepository;
 
     public PadreController(
             ApoderadoRepository apoderadoRepository,
@@ -34,13 +41,21 @@ public class PadreController {
             JustificacionInasistenciaRepository justificacionRepository,
             ConfiguracionColegioRepository configuracionRepository,
             FileStorageService fileStorageService,
-            EstudianteRepository estudianteRepository) {
+            EstudianteRepository estudianteRepository,
+            MatriculaRepository matriculaRepository,
+            TareaEscolarRepository tareaRepository,
+            ComunicadoAulaRepository comunicadoRepository,
+            ReporteConductaRepository reporteConductaRepository) {
         this.apoderadoRepository = apoderadoRepository;
         this.asistenciaRepository = asistenciaRepository;
         this.justificacionRepository = justificacionRepository;
         this.configuracionRepository = configuracionRepository;
         this.fileStorageService = fileStorageService;
         this.estudianteRepository = estudianteRepository;
+        this.matriculaRepository = matriculaRepository;
+        this.tareaRepository = tareaRepository;
+        this.comunicadoRepository = comunicadoRepository;
+        this.reporteConductaRepository = reporteConductaRepository;
     }
 
     @GetMapping("/hijos")
@@ -66,18 +81,26 @@ public class PadreController {
             hijosFiltrados = new ArrayList<>(hijos);
         }
 
-        // Historial de asistencias de los hijos
+        // Mapas por hijo: asistencias, tareas, comunicados y conducta
         Map<Long, List<RegistroAsistencia>> asistenciasPorHijo = new HashMap<>();
         Map<Long, Boolean> plazoValidoPorRegistro = new HashMap<>();
         Map<Long, JustificacionInasistencia> justificacionesPorRegistro = new HashMap<>();
+        Map<Long, List<TareaEscolar>> tareasPorHijo = new HashMap<>();
+        Map<Long, List<ComunicadoAula>> comunicadosPorHijo = new HashMap<>();
+        Map<Long, List<ReporteConducta>> reportesPorHijo = new HashMap<>();
+        Map<Long, Matricula> matriculaPorHijo = new HashMap<>();
+
         LocalDateTime ahora = FechaUtil.ahoraFechaHoraPeru();
+        int totalTareasPendientes = 0;
+        int totalComunicadosUrgentes = 0;
+        List<String> alertasPush = new ArrayList<>();
 
         for (Estudiante hijo : hijosFiltrados) {
+            // Asistencias
             List<RegistroAsistencia> asistencias = asistenciaRepository.findByEstudianteDniOrderByFechaDesc(hijo.getDni());
             asistenciasPorHijo.put(hijo.getId(), asistencias);
 
             for (RegistroAsistencia asis : asistencias) {
-                // Verificar si ya tiene justificación
                 justificacionRepository.findByRegistroAsistenciaId(asis.getId())
                         .ifPresent(j -> justificacionesPorRegistro.put(asis.getId(), j));
 
@@ -87,6 +110,40 @@ public class PadreController {
                     plazoValidoPorRegistro.put(asis.getId(), enPlazo);
                 }
             }
+
+            // Matrícula, Tareas y Comunicados
+            Optional<Matricula> matOpt = matriculaRepository.findByEstudianteIdAndAnioEscolarActivoTrue(hijo.getId());
+            if (matOpt.isPresent()) {
+                Matricula mat = matOpt.get();
+                matriculaPorHijo.put(hijo.getId(), mat);
+
+                if (mat.getSeccion() != null && mat.getSeccion().getGrado() != null) {
+                    Long gradoId = mat.getSeccion().getGrado().getId();
+                    Long seccionId = mat.getSeccion().getId();
+
+                    List<TareaEscolar> tareas = tareaRepository.findByGradoIdAndSeccionIdAndActivoTrueOrderByFechaEntregaAsc(gradoId, seccionId);
+                    tareasPorHijo.put(hijo.getId(), tareas);
+                    for (TareaEscolar t : tareas) {
+                        if (!t.isVencida()) {
+                            totalTareasPendientes++;
+                            alertasPush.add("Tarea: " + t.getMateria() + " - " + t.getTitulo() + " (Para: " + hijo.getNombreCompleto() + ")");
+                        }
+                    }
+
+                    List<ComunicadoAula> coms = comunicadoRepository.findByGradoIdAndSeccionIdOrderByFechaPublicacionDesc(gradoId, seccionId);
+                    comunicadosPorHijo.put(hijo.getId(), coms);
+                    for (ComunicadoAula c : coms) {
+                        if (c.isUrgente()) {
+                            totalComunicadosUrgentes++;
+                            alertasPush.add("COMUNICADO URGENTE: " + c.getTitulo());
+                        }
+                    }
+                }
+            }
+
+            // Reportes de Conducta
+            List<ReporteConducta> reportes = reporteConductaRepository.findByEstudianteIdOrderByFechaIncidenciaDesc(hijo.getId());
+            reportesPorHijo.put(hijo.getId(), reportes);
         }
 
         ConfiguracionColegio colegio = configuracionRepository.findFirstByActivoTrue()
@@ -98,8 +155,80 @@ public class PadreController {
         model.addAttribute("asistenciasPorHijo", asistenciasPorHijo);
         model.addAttribute("plazoValidoPorRegistro", plazoValidoPorRegistro);
         model.addAttribute("justificacionesPorRegistro", justificacionesPorRegistro);
+        model.addAttribute("matriculaPorHijo", matriculaPorHijo);
+        model.addAttribute("tareasPorHijo", tareasPorHijo);
+        model.addAttribute("comunicadosPorHijo", comunicadosPorHijo);
+        model.addAttribute("reportesPorHijo", reportesPorHijo);
+        model.addAttribute("totalTareasPendientes", totalTareasPendientes);
+        model.addAttribute("totalComunicadosUrgentes", totalComunicadosUrgentes);
+        model.addAttribute("alertasPush", alertasPush);
 
         return "padre/hijos";
+    }
+
+    @PostMapping("/actualizar-parentesco")
+    public String actualizarParentesco(
+            @RequestParam("parentesco") String parentesco,
+            Authentication auth,
+            RedirectAttributes flash) {
+
+        String dniPadre = auth.getName();
+        Apoderado apoderado = apoderadoRepository.findByDni(dniPadre)
+                .orElseThrow(() -> new IllegalStateException("Apoderado no encontrado con DNI: " + dniPadre));
+
+        if (parentesco != null && !parentesco.trim().isEmpty()) {
+            apoderado.setParentesco(parentesco.trim());
+            apoderadoRepository.save(apoderado);
+            flash.addFlashAttribute("mensajeExito", "Parentesco actualizado a: " + ("MADRE".equalsIgnoreCase(parentesco) ? "Madre" : ("PADRE".equalsIgnoreCase(parentesco) ? "Padre" : "Apoderado Legal")));
+        }
+
+        return "redirect:/padre/hijos";
+    }
+
+    @GetMapping("/tareas/{id}/adjunto")
+    @ResponseBody
+    public ResponseEntity<byte[]> descargarAdjuntoTarea(@PathVariable Long id) {
+        TareaEscolar tarea = tareaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tarea no encontrada"));
+
+        if (!tarea.tieneArchivo()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        if (tarea.getArchivoAdjuntoContentType() != null) {
+            try {
+                mediaType = MediaType.parseMediaType(tarea.getArchivoAdjuntoContentType());
+            } catch (Exception ignored) {}
+        }
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + (tarea.getArchivoAdjuntoNombre() != null ? tarea.getArchivoAdjuntoNombre() : "adjunto_tarea") + "\"")
+                .body(tarea.getArchivoAdjuntoData());
+    }
+
+    @GetMapping("/comunicados/{id}/adjunto")
+    @ResponseBody
+    public ResponseEntity<byte[]> descargarAdjuntoComunicado(@PathVariable Long id) {
+        ComunicadoAula com = comunicadoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Comunicado no encontrado"));
+
+        if (!com.tieneArchivo()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        if (com.getArchivoAdjuntoContentType() != null) {
+            try {
+                mediaType = MediaType.parseMediaType(com.getArchivoAdjuntoContentType());
+            } catch (Exception ignored) {}
+        }
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + (com.getArchivoAdjuntoNombre() != null ? com.getArchivoAdjuntoNombre() : "comunicado_adjunto") + "\"")
+                .body(com.getArchivoAdjuntoData());
     }
 
     @PostMapping("/justificar")
@@ -117,12 +246,10 @@ public class PadreController {
         RegistroAsistencia registro = asistenciaRepository.findById(registroId)
                 .orElseThrow(() -> new IllegalArgumentException("Registro de asistencia no encontrado."));
 
-        // Seguridad: Verificar que el estudiante realmente sea hijo del apoderado solicitante
         if (!apoderado.tieneHijoConDni(registro.getEstudiante().getDni())) {
             throw new SecurityException("No tiene autorización para justificar la inasistencia de este estudiante.");
         }
 
-        // Seguridad estricta: Verificar la ventana de 48 horas calculada por el servidor
         LocalDateTime ahora = FechaUtil.ahoraFechaHoraPeru();
         LocalDateTime fechaLimite = registro.getFecha().atTime(23, 59, 59).plusHours(48);
 
@@ -132,7 +259,6 @@ public class PadreController {
             return "redirect:/padre/hijos";
         }
 
-        // Verificar si ya existe una justificación para este registro
         if (justificacionRepository.findByRegistroAsistenciaId(registroId).isPresent()) {
             redirectAttributes.addFlashAttribute("mensajeError", "Ya existe una justificación registrada para esta fecha.");
             return "redirect:/padre/hijos";

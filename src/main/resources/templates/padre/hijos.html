@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Portal de Apoderados - I.E.P. Internacional Jeshua</title>
+    <title>Portal de Familias y Apoderados - I.E.P. Internacional Jeshua</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -17,7 +17,17 @@
             border-radius: 1.25rem;
             border-top: 5px solid #b91c1c;
         }
-        /* Optimizaciones para teléfonos móviles */
+        .nav-pills .nav-link.active {
+            background-color: #b91c1c;
+            color: white !important;
+            font-weight: bold;
+        }
+        .nav-pills .nav-link {
+            color: #4b5563;
+            border-radius: 2rem;
+            padding: 0.4rem 1rem;
+            font-size: 0.88rem;
+        }
         @media (max-width: 767.98px) {
             .container {
                 padding-left: 12px !important;
@@ -40,24 +50,36 @@
 </head>
 <body class="bg-light">
 
-    <!-- Navbar del Padre de Familia (100% Adaptado a Móvil y Laptop) -->
+    <!-- Navbar del Portal de Padres (100% Adaptado a Móvil y Laptop) -->
     <nav class="navbar navbar-dark bg-jeshua shadow-sm sticky-top py-2">
         <div class="container px-3 px-sm-4 d-flex justify-content-between align-items-center">
             <a class="navbar-brand fw-bold d-flex align-items-center gap-2 m-0" th:href="@{/padre/hijos}">
                 <div class="rounded-3 d-flex align-items-center justify-content-center p-1 bg-white shadow-sm flex-shrink-0" style="width: 36px; height: 36px;">
-                    <img th:src="@{/logo-colegio}" 
-                         alt="Logo" style="max-height: 28px; max-width: 30px; object-fit: contain;">
+                    <img th:src="@{/logo-colegio}" alt="Logo" style="max-height: 28px; max-width: 30px; object-fit: contain;">
                 </div>
-                <div class="lh-1 text-truncate" style="max-width: 170px;">
+                <div class="lh-1 text-truncate" style="max-width: 190px;">
                     <span class="d-none d-sm-inline fs-6 text-white" th:text="${colegio != null ? colegio.nombreColegio : 'I.E.P. Internacional Jeshua'}">I.E.P. Internacional Jeshua</span>
                     <span class="d-inline d-sm-none fs-6 fw-bold text-white">I.E.P. Jeshua</span>
-                    <span class="badge bg-white text-danger ms-1 small rounded-pill d-none d-md-inline" style="font-size: 0.65rem;">Portal Apoderados</span>
+                    <span class="badge bg-white text-danger ms-1 small rounded-pill d-none d-md-inline" style="font-size: 0.65rem;">Portal de Familias</span>
                 </div>
             </a>
             <div class="d-flex align-items-center gap-2">
-                <span class="text-white small text-truncate" style="max-width: 130px;">
-                    <i class="bi bi-person-circle me-1"></i> <strong th:text="${apoderado.nombres != null ? apoderado.nombres : apoderado.nombreCompleto}">Juan</strong>
-                </span>
+                <!-- Distinción Visual: Padre / Madre / Apoderado -->
+                <div class="text-white small d-flex align-items-center gap-1">
+                    <span th:if="${apoderado.parentesco == 'MADRE'}" class="badge bg-white text-danger rounded-pill fw-bold shadow-sm">
+                        <i class="bi bi-heart-fill me-1"></i> Mamá (Madre)
+                    </span>
+                    <span th:if="${apoderado.parentesco == 'PADRE'}" class="badge bg-white text-primary rounded-pill fw-bold shadow-sm">
+                        <i class="bi bi-person-fill me-1"></i> Papá (Padre)
+                    </span>
+                    <span th:if="${apoderado.parentesco != 'MADRE' and apoderado.parentesco != 'PADRE'}" class="badge bg-white text-secondary rounded-pill fw-bold shadow-sm">
+                        <i class="bi bi-shield-check me-1"></i> Apoderado(a)
+                    </span>
+                    <button class="btn btn-sm btn-outline-light rounded-circle p-1" data-bs-toggle="modal" data-bs-target="#modalParentesco" title="Cambiar rol (Padre/Madre/Apoderado)">
+                        <i class="bi bi-pencil" style="font-size: 0.75rem;"></i>
+                    </button>
+                </div>
+
                 <form th:action="@{/logout}" method="post" class="m-0">
                     <button type="submit" class="btn btn-outline-light btn-sm rounded-pill px-2 px-sm-3" title="Cerrar Sesión">
                         <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline ms-1">Salir</span>
@@ -68,29 +90,50 @@
     </nav>
 
     <div class="container py-3 py-sm-4">
-        <!-- Notificaciones -->
-        <div th:if="${mensajeExito}" class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-3 mb-sm-4" role="alert">
+
+        <!-- Notificaciones de Sistema -->
+        <div th:if="${mensajeExito}" class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm mb-3" role="alert">
             <i class="bi bi-check-circle-fill me-2 fs-5"></i> <span th:text="${mensajeExito}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        <div th:if="${mensajeError}" class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-3 mb-sm-4" role="alert">
+        <div th:if="${mensajeError}" class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm mb-3" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i> <span th:text="${mensajeError}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
+        <!-- Banner de Permiso de Notificaciones Push del Navegador -->
+        <div id="bannerNotificaciones" class="alert alert-danger border-0 shadow-sm rounded-4 p-3 mb-3 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2" style="background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); color: white; display: none !important;">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-bell-fill fs-3 text-warning flex-shrink-0"></i>
+                <div>
+                    <strong class="d-block">Activar Notificaciones en Tiempo Real:</strong>
+                    <span class="small text-white-50">Reciba avisos urgentes de los tutores y nuevas tareas escolares directamente en su celular o computadora.</span>
+                </div>
+            </div>
+            <button id="btnActivarNotificaciones" class="btn btn-light btn-sm rounded-pill px-3 fw-bold text-danger flex-shrink-0 align-self-end align-self-sm-auto shadow-sm">
+                <i class="bi bi-bell-check-fill me-1"></i> Permitir Notificaciones
+            </button>
+        </div>
+
         <!-- Encabezado y Barra de Búsqueda por DNI del Alumno -->
-        <div class="card shadow-sm border-0 rounded-4 p-3 p-sm-4 mb-3 mb-sm-4">
+        <div class="card shadow-sm border-0 rounded-4 p-3 p-sm-4 mb-3 mb-sm-4 bg-white">
             <div class="row align-items-center g-3">
                 <div class="col-12 col-md-6 text-center text-md-start">
-                    <h4 class="fw-bold text-dark mb-1 fs-5 fs-sm-4">Mis Hijos Matriculados</h4>
-                    <p class="text-muted small mb-0">Usted tiene <strong class="text-danger" th:text="${#lists.size(hijos)} + ' hijo(s)'">5 hijos</strong> registrados bajo su tutela.</p>
+                    <h4 class="fw-bold text-dark mb-1 fs-5 fs-sm-4">
+                        Mis Hijos Matriculados
+                    </h4>
+                    <p class="text-muted small mb-0">
+                        Bienvenido(a) <strong th:text="${apoderado.nombres != null ? apoderado.nombres + ' ' + apoderado.apellidos : apoderado.nombreCompleto}">Juan Quispe</strong>
+                        (<span class="text-danger fw-bold" th:text="${apoderado.parentesco == 'MADRE' ? 'Madre de Familia' : (apoderado.parentesco == 'PADRE' ? 'Padre de Familia' : 'Apoderado Legal')}">Padre</span>).
+                        Tiene <strong class="text-danger" th:text="${#lists.size(hijos)} + ' hijo(s)'">1 hijo(s)</strong> registrado(s).
+                    </p>
                 </div>
                 <div class="col-12 col-md-6">
                     <form th:action="@{/padre/hijos}" method="get" class="d-flex gap-2">
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-danger"></i></span>
                             <input type="text" class="form-control border-start-0" name="dniHijo" 
-                                   th:value="${busquedaDni}" placeholder="Buscar por DNI (8 dígitos)" maxlength="8">
+                                   th:value="${busquedaDni}" placeholder="Buscar hijo por DNI (8 dígitos)" maxlength="8">
                         </div>
                         <button type="submit" class="btn btn-danger px-3 rounded-3 bg-jeshua">Buscar</button>
                         <a th:if="${busquedaDni}" th:href="@{/padre/hijos}" class="btn btn-outline-secondary px-3 rounded-3">Limpiar</a>
@@ -100,7 +143,7 @@
         </div>
 
         <!-- Estado si no tiene hijos vinculados todavía -->
-        <div th:if="${#lists.isEmpty(hijos)}" class="card shadow-sm border-0 rounded-4 p-4 p-sm-5 text-center mb-4">
+        <div th:if="${#lists.isEmpty(hijos)}" class="card shadow-sm border-0 rounded-4 p-4 p-sm-5 text-center mb-4 bg-white">
             <div class="mb-3">
                 <i class="bi bi-people-fill text-danger display-4"></i>
             </div>
@@ -120,10 +163,12 @@
             </div>
         </div>
 
-        <!-- Lista de Tarjetas de Hijos -->
+        <!-- Lista de Tarjetas de Hijos con Pestañas Completas -->
         <div th:unless="${#lists.isEmpty(hijos)}" class="row g-3 g-sm-4">
             <div th:each="hijo : ${hijos}" class="col-12">
-                <div class="card child-card shadow-sm border-0 p-3 p-sm-4">
+                <div class="card child-card shadow-sm border-0 p-3 p-sm-4 bg-white">
+                    
+                    <!-- Cabecera del Alumno -->
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <div class="d-flex align-items-center">
                             <div class="bg-danger-subtle text-danger p-2 p-sm-3 rounded-circle fs-4 fs-sm-3 me-2 me-sm-3 flex-shrink-0">
@@ -134,172 +179,276 @@
                                 <div class="d-flex flex-wrap gap-1">
                                     <span class="badge bg-light text-secondary border" th:text="'DNI: ' + ${hijo.dni}">DNI: 71234567</span>
                                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle" th:text="'QR: ' + ${hijo.codigoQr}">JESHUA-0B763262</span>
+                                    <span th:if="${matriculaPorHijo.get(hijo.id) != null}" class="badge bg-primary-subtle text-primary border" 
+                                          th:text="${matriculaPorHijo.get(hijo.id).seccion.grado.nombre + ' (' + matriculaPorHijo.get(hijo.id).seccion.nombre + ')'}">1° Primaria A</span>
                                 </div>
                             </div>
                         </div>
                         <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill small">
-                            <i class="bi bi-check-circle-fill me-1"></i> Alumno Activo
+                            <i class="bi bi-check-circle-fill me-1"></i> Matrícula Activa 2026
                         </span>
                     </div>
 
-                    <h6 class="fw-bold text-dark mt-2 mb-2"><i class="bi bi-calendar-check text-danger me-1"></i> Historial de Asistencias:</h6>
+                    <!-- Pestañas de Navegación por Hijo -->
+                    <ul class="nav nav-pills mb-3 border-bottom pb-2 gap-1" th:id="'tabsHijo-' + ${hijo.id}" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" th:id="'asist-tab-' + ${hijo.id}" data-bs-toggle="pill" th:data-bs-target="'#asist-pane-' + ${hijo.id}" type="button" role="tab">
+                                <i class="bi bi-calendar-check me-1"></i> Asistencia Diaria
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link position-relative" th:id="'tareas-tab-' + ${hijo.id}" data-bs-toggle="pill" th:data-bs-target="'#tareas-pane-' + ${hijo.id}" type="button" role="tab">
+                                <i class="bi bi-journal-text me-1"></i> Tareas Escolares
+                                <span th:if="${tareasPorHijo.get(hijo.id) != null and !#lists.isEmpty(tareasPorHijo.get(hijo.id))}" class="badge bg-danger rounded-pill ms-1" th:text="${#lists.size(tareasPorHijo.get(hijo.id))}">2</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link position-relative" th:id="'coms-tab-' + ${hijo.id}" data-bs-toggle="pill" th:data-bs-target="'#coms-pane-' + ${hijo.id}" type="button" role="tab">
+                                <i class="bi bi-megaphone me-1"></i> Comunicados de Aula
+                                <span th:if="${comunicadosPorHijo.get(hijo.id) != null and !#lists.isEmpty(comunicadosPorHijo.get(hijo.id))}" class="badge bg-warning text-dark rounded-pill ms-1" th:text="${#lists.size(comunicadosPorHijo.get(hijo.id))}">1</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" th:id="'conducta-tab-' + ${hijo.id}" data-bs-toggle="pill" th:data-bs-target="'#conducta-pane-' + ${hijo.id}" type="button" role="tab">
+                                <i class="bi bi-shield-exclamation me-1"></i> Conducta & Incidencias
+                            </button>
+                        </li>
+                    </ul>
 
-                    <!-- VISTA 1: TABLA PARA PANTALLAS DE LAPTOP Y TABLET (Desktop d-none d-md-block) -->
-                    <div class="d-none d-md-block table-responsive">
-                        <table class="table table-hover align-middle small mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Hora Entrada</th>
-                                    <th>Hora Salida</th>
-                                    <th>Estado de Asistencia</th>
-                                    <th>Acción / Justificación</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:if="${asistenciasPorHijo.get(hijo.id) == null or #lists.isEmpty(asistenciasPorHijo.get(hijo.id))}">
-                                    <td colspan="5" class="text-center py-4 text-muted">
-                                        No hay registros de asistencia en el sistema escolar para este estudiante.
-                                    </td>
-                                </tr>
-                                <tr th:each="asist : ${asistenciasPorHijo.get(hijo.id)}">
-                                    <td class="fw-bold" th:text="${#temporals.format(asist.fecha, 'dd/MM/yyyy')}">-</td>
-                                    <td th:text="${asist.horaEntrada != null ? #temporals.format(asist.horaEntrada, 'HH:mm:ss') : '-'}">-</td>
-                                    <td th:text="${asist.horaSalida != null ? #temporals.format(asist.horaSalida, 'HH:mm:ss') : '-'}">-</td>
-                                    <td>
-                                        <span th:if="${asist.estado.name() == 'PUNTUAL' or asist.estado.name() == 'TEMPRANO'}" class="badge bg-success-subtle text-success border px-2 py-1 rounded-pill">
-                                            <i class="bi bi-check-circle-fill me-1"></i> Puntual
-                                        </span>
-                                        <span th:if="${asist.estado.name() == 'TARDANZA'}" class="badge bg-warning-subtle text-warning-emphasis border px-2 py-1 rounded-pill">
-                                            <i class="bi bi-clock-history me-1"></i> Tardanza
-                                        </span>
-                                        <span th:if="${asist.estado.name() == 'INASISTENCIA'}" class="badge bg-danger-subtle text-danger border px-2 py-1 rounded-pill">
-                                            <i class="bi bi-x-circle-fill me-1"></i> Inasistencia (Falta)
-                                        </span>
-                                        <span th:if="${asist.estado.name() == 'JUSTIFICADO'}" class="badge bg-info-subtle text-info border px-2 py-1 rounded-pill">
-                                            <i class="bi bi-shield-check me-1"></i> Justificada
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <!-- Si ya tiene justificación registrada -->
-                                        <div th:if="${justificacionesPorRegistro.containsKey(asist.id)}">
-                                            <span th:if="${justificacionesPorRegistro.get(asist.id).estado.name() == 'PENDIENTE'}" 
-                                                  class="badge bg-warning text-dark px-3 py-2 rounded-pill">
+                    <!-- Contenido de las Pestañas -->
+                    <div class="tab-content" th:id="'tabsContent-' + ${hijo.id}">
+                        
+                        <!-- PESTAÑA 1: HISTORIAL DE ASISTENCIAS -->
+                        <div class="tab-pane fade show active" th:id="'asist-pane-' + ${hijo.id}" role="tabpanel">
+                            
+                            <!-- Tabla de Asistencias (Desktop) -->
+                            <div class="d-none d-md-block table-responsive">
+                                <table class="table table-hover align-middle small mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Hora Entrada</th>
+                                            <th>Hora Salida</th>
+                                            <th>Estado de Asistencia</th>
+                                            <th>Acción / Justificación</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${asistenciasPorHijo.get(hijo.id) == null or #lists.isEmpty(asistenciasPorHijo.get(hijo.id))}">
+                                            <td colspan="5" class="text-center py-4 text-muted">
+                                                No hay registros de asistencia en el sistema escolar para este estudiante.
+                                            </td>
+                                        </tr>
+                                        <tr th:each="asist : ${asistenciasPorHijo.get(hijo.id)}">
+                                            <td class="fw-bold" th:text="${#temporals.format(asist.fecha, 'dd/MM/yyyy')}">-</td>
+                                            <td th:text="${asist.horaEntrada != null ? #temporals.format(asist.horaEntrada, 'HH:mm:ss') : '-'}">-</td>
+                                            <td th:text="${asist.horaSalida != null ? #temporals.format(asist.horaSalida, 'HH:mm:ss') : '-'}">-</td>
+                                            <td>
+                                                <span th:if="${asist.estado.name() == 'PUNTUAL' or asist.estado.name() == 'TEMPRANO'}" class="badge bg-success-subtle text-success border px-2 py-1 rounded-pill">
+                                                    <i class="bi bi-check-circle-fill me-1"></i> Puntual
+                                                </span>
+                                                <span th:if="${asist.estado.name() == 'TARDANZA'}" class="badge bg-warning-subtle text-warning-emphasis border px-2 py-1 rounded-pill">
+                                                    <i class="bi bi-clock-history me-1"></i> Tardanza
+                                                </span>
+                                                <span th:if="${asist.estado.name() == 'INASISTENCIA'}" class="badge bg-danger-subtle text-danger border px-2 py-1 rounded-pill">
+                                                    <i class="bi bi-x-circle-fill me-1"></i> Inasistencia (Falta)
+                                                </span>
+                                                <span th:if="${asist.estado.name() == 'JUSTIFICADO'}" class="badge bg-info-subtle text-info border px-2 py-1 rounded-pill">
+                                                    <i class="bi bi-shield-check me-1"></i> Justificada
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div th:if="${justificacionesPorRegistro.containsKey(asist.id)}">
+                                                    <span th:if="${justificacionesPorRegistro.get(asist.id).estado.name() == 'PENDIENTE'}" class="badge bg-warning text-dark px-3 py-2 rounded-pill">
+                                                        <i class="bi bi-hourglass-split me-1"></i> En revisión por Dirección
+                                                    </span>
+                                                    <span th:if="${justificacionesPorRegistro.get(asist.id).estado.name() == 'APROBADA'}" class="badge bg-success px-3 py-2 rounded-pill">
+                                                        <i class="bi bi-check-circle-fill me-1"></i> Aprobada (Justificada)
+                                                    </span>
+                                                    <span th:if="${justificacionesPorRegistro.get(asist.id).estado.name() == 'RECHAZADA'}" class="badge bg-danger px-3 py-2 rounded-pill">
+                                                        <i class="bi bi-x-circle-fill me-1"></i> Rechazada
+                                                    </span>
+                                                </div>
+                                                <div th:unless="${justificacionesPorRegistro.containsKey(asist.id)}">
+                                                    <div th:if="${asist.estado.name() == 'INASISTENCIA' and plazoValidoPorRegistro.get(asist.id)}">
+                                                        <button type="button" class="btn btn-warning btn-sm rounded-pill px-3 shadow-sm fw-semibold"
+                                                                th:data-registro-id="${asist.id}"
+                                                                th:data-alumno="${hijo.nombreCompleto}"
+                                                                th:data-fecha="${#temporals.format(asist.fecha, 'dd/MM/yyyy')}"
+                                                                onclick="abrirModalJustificar(this)">
+                                                            <i class="bi bi-file-earmark-arrow-up me-1"></i> Justificar Falta (48h)
+                                                        </button>
+                                                    </div>
+                                                    <div th:if="${asist.estado.name() == 'INASISTENCIA' and !plazoValidoPorRegistro.get(asist.id)}">
+                                                        <span class="badge bg-secondary-subtle text-secondary border px-3 py-2 rounded-pill">
+                                                            <i class="bi bi-clock-fill me-1"></i> Plazo 48h vencido
+                                                        </span>
+                                                    </div>
+                                                    <div th:if="${asist.estado.name() != 'INASISTENCIA'}">
+                                                        <span class="text-muted small">-</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Tarjetas Móviles de Asistencias -->
+                            <div class="d-block d-md-none">
+                                <div th:if="${asistenciasPorHijo.get(hijo.id) == null or #lists.isEmpty(asistenciasPorHijo.get(hijo.id))}" class="text-center py-3 text-muted small">
+                                    No hay registros de asistencia en el sistema escolar para este estudiante.
+                                </div>
+                                <div th:each="asist : ${asistenciasPorHijo.get(hijo.id)}" class="mobile-record-card">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6" th:text="${#temporals.format(asist.fecha, 'dd/MM/yyyy')}">22/11/2026</div>
+                                            <small class="text-muted" style="font-size: 0.78rem;">
+                                                <span th:if="${asist.horaEntrada != null}" th:text="'Hora: ' + ${#temporals.format(asist.horaEntrada, 'HH:mm')}"></span>
+                                                <span th:unless="${asist.horaEntrada != null}">Sin marcar en puerta</span>
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <span th:if="${asist.estado.name() == 'PUNTUAL' or asist.estado.name() == 'TEMPRANO'}" class="badge bg-success-subtle text-success border px-2 py-1 rounded-pill">
+                                                <i class="bi bi-check-circle-fill me-1"></i> Puntual
+                                            </span>
+                                            <span th:if="${asist.estado.name() == 'TARDANZA'}" class="badge bg-warning-subtle text-warning-emphasis border px-2 py-1 rounded-pill">
+                                                <i class="bi bi-clock-history me-1"></i> Tardanza
+                                            </span>
+                                            <span th:if="${asist.estado.name() == 'INASISTENCIA'}" class="badge bg-danger text-white px-2 py-1 rounded-pill shadow-sm">
+                                                <i class="bi bi-x-circle-fill me-1"></i> Falta
+                                            </span>
+                                            <span th:if="${asist.estado.name() == 'JUSTIFICADO'}" class="badge bg-info-subtle text-info border px-2 py-1 rounded-pill">
+                                                <i class="bi bi-shield-check me-1"></i> Justificada
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-top" th:if="${asist.estado.name() == 'INASISTENCIA'}">
+                                        <div th:if="${justificacionesPorRegistro.containsKey(asist.id)}" class="text-center">
+                                            <span th:if="${justificacionesPorRegistro.get(asist.id).estado.name() == 'PENDIENTE'}" class="badge bg-warning text-dark px-3 py-2 rounded-pill w-100 d-block">
                                                 <i class="bi bi-hourglass-split me-1"></i> En revisión por Dirección
                                             </span>
-                                            <span th:if="${justificacionesPorRegistro.get(asist.id).estado.name() == 'APROBADA'}" 
-                                                  class="badge bg-success px-3 py-2 rounded-pill">
-                                                <i class="bi bi-check-circle-fill me-1"></i> Aprobada (Falta Justificada)
+                                            <span th:if="${justificacionesPorRegistro.get(asist.id).estado.name() == 'APROBADA'}" class="badge bg-success px-3 py-2 rounded-pill w-100 d-block">
+                                                <i class="bi bi-check-circle-fill me-1"></i> Aprobada (Justificada)
                                             </span>
-                                            <span th:if="${justificacionesPorRegistro.get(asist.id).estado.name() == 'RECHAZADA'}" 
-                                                  class="badge bg-danger px-3 py-2 rounded-pill"
-                                                  th:title="${justificacionesPorRegistro.get(asist.id).observacionRevision}">
+                                            <span th:if="${justificacionesPorRegistro.get(asist.id).estado.name() == 'RECHAZADA'}" class="badge bg-danger px-3 py-2 rounded-pill w-100 d-block">
                                                 <i class="bi bi-x-circle-fill me-1"></i> Justificación Rechazada
                                             </span>
                                         </div>
-
-                                        <!-- Si NO tiene justificación aún -->
                                         <div th:unless="${justificacionesPorRegistro.containsKey(asist.id)}">
-                                            <!-- Caso 1: Inasistencia dentro del plazo legal de 48 horas -->
-                                            <div th:if="${asist.estado.name() == 'INASISTENCIA' and plazoValidoPorRegistro.get(asist.id)}">
-                                                <button type="button" class="btn btn-warning btn-sm rounded-pill px-3 shadow-sm fw-semibold"
-                                                        th:data-registro-id="${asist.id}"
-                                                        th:data-alumno="${hijo.nombreCompleto}"
-                                                        th:data-fecha="${#temporals.format(asist.fecha, 'dd/MM/yyyy')}"
-                                                        onclick="abrirModalJustificar(this)">
-                                                    <i class="bi bi-file-earmark-arrow-up me-1"></i> Justificar Falta (48h)
-                                                </button>
-                                            </div>
+                                            <button th:if="${plazoValidoPorRegistro.get(asist.id)}" type="button" class="btn btn-warning btn-sm rounded-pill w-100 py-2 shadow-sm fw-bold"
+                                                    th:data-registro-id="${asist.id}"
+                                                    th:data-alumno="${hijo.nombreCompleto}"
+                                                    th:data-fecha="${#temporals.format(asist.fecha, 'dd/MM/yyyy')}"
+                                                    onclick="abrirModalJustificar(this)">
+                                                <i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Justificar Falta (48h)
+                                            </button>
+                                            <span th:unless="${plazoValidoPorRegistro.get(asist.id)}" class="badge bg-secondary-subtle text-secondary border px-3 py-2 rounded-pill w-100 d-block">
+                                                Plazo legal de 48h vencido
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                                            <!-- Caso 2: Inasistencia con plazo de 48 horas vencido -->
-                                            <div th:if="${asist.estado.name() == 'INASISTENCIA' and !plazoValidoPorRegistro.get(asist.id)}">
-                                                <span class="badge bg-secondary-subtle text-secondary border px-3 py-2 rounded-pill" title="Superó el plazo legal de 48 horas">
-                                                    <i class="bi bi-clock-fill me-1"></i> Plazo de 48h vencido
+                        <!-- PESTAÑA 2: TAREAS ESCOLARES -->
+                        <div class="tab-pane fade" th:id="'tareas-pane-' + ${hijo.id}" role="tabpanel">
+                            <div th:if="${tareasPorHijo.get(hijo.id) == null or #lists.isEmpty(tareasPorHijo.get(hijo.id))}" class="text-center py-4 text-muted">
+                                <i class="bi bi-journal-check display-4 text-success mb-2"></i>
+                                <h6 class="fw-bold">¡Sin tareas pendientes!</h6>
+                                <p class="small mb-0">No hay tareas programadas para el grado y sección de su hijo(a).</p>
+                            </div>
+
+                            <div th:unless="${tareasPorHijo.get(hijo.id) == null or #lists.isEmpty(tareasPorHijo.get(hijo.id))}" class="row g-3">
+                                <div class="col-12 col-md-6" th:each="t : ${tareasPorHijo.get(hijo.id)}">
+                                    <div class="card h-100 rounded-4 border p-3 bg-light">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1" th:text="${t.materia}">Matemáticas</span>
+                                            <span th:if="${t.isVencida()}" class="badge bg-danger text-white rounded-pill px-2 py-1 small">Vencida</span>
+                                            <span th:unless="${t.isVencida()}" class="badge bg-success text-white rounded-pill px-2 py-1 small">
+                                                <i class="bi bi-clock me-1"></i> Entrega: <strong th:text="${#temporals.format(t.fechaEntrega, 'dd/MM')}">01/12</strong>
+                                            </span>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1" th:text="${t.titulo}">Ficha 1</h6>
+                                        <p class="small text-muted mb-3" th:text="${t.descripcion}">Indicaciones...</p>
+                                        <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                                            <small class="text-muted"><i class="bi bi-person me-1"></i> <span th:text="${t.profesor != null ? t.profesor.nombreCompleto : 'Docente'}">Profesor</span></small>
+                                            <a th:if="${t.tieneArchivo()}" th:href="@{/padre/tareas/{id}/adjunto(id=${t.id})}" target="_blank" class="btn btn-outline-danger btn-sm rounded-pill px-3 shadow-sm">
+                                                <i class="bi bi-download me-1"></i> Descargar Adjunto
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PESTAÑA 3: COMUNICADOS DEL TUTOR -->
+                        <div class="tab-pane fade" th:id="'coms-pane-' + ${hijo.id}" role="tabpanel">
+                            <div th:if="${comunicadosPorHijo.get(hijo.id) == null or #lists.isEmpty(comunicadosPorHijo.get(hijo.id))}" class="text-center py-4 text-muted">
+                                <i class="bi bi-chat-heart display-4 text-secondary mb-2"></i>
+                                <h6 class="fw-bold">No hay comunicados vigentes</h6>
+                                <p class="small mb-0">Los comunicados del tutor aparecerán aquí con copia a su correo.</p>
+                            </div>
+
+                            <div th:unless="${comunicadosPorHijo.get(hijo.id) == null or #lists.isEmpty(comunicadosPorHijo.get(hijo.id))}" class="row g-3">
+                                <div class="col-12" th:each="c : ${comunicadosPorHijo.get(hijo.id)}">
+                                    <div class="card rounded-4 border p-3" th:classappend="${c.isUrgente() ? 'border-danger bg-danger-subtle' : 'bg-light'}">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <span th:if="${c.isUrgente()}" class="badge bg-danger text-white rounded-pill px-2 py-1 fw-bold">
+                                                    <i class="bi bi-exclamation-octagon-fill me-1"></i> COMUNICADO URGENTE
+                                                </span>
+                                                <span th:unless="${c.isUrgente()}" class="badge bg-info-subtle text-info-emphasis border rounded-pill px-2 py-1">
+                                                    Aviso Oficial
                                                 </span>
                                             </div>
-
-                                            <!-- Caso 3: Asistencia normal puntual o tardanza -->
-                                            <div th:if="${asist.estado.name() != 'INASISTENCIA'}">
-                                                <span class="text-muted small"><i class="bi bi-dash-lg"></i></span>
-                                            </div>
+                                            <small class="text-muted font-monospace" th:text="${#temporals.format(c.fechaPublicacion, 'dd/MM/yyyy HH:mm')}">28/11/2026</small>
                                         </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- VISTA 2: LISTA DE TARJETAS TÁCTILES PARA TELÉFONOS MÓVILES (d-block d-md-none) -->
-                    <div class="d-block d-md-none">
-                        <div th:if="${asistenciasPorHijo.get(hijo.id) == null or #lists.isEmpty(asistenciasPorHijo.get(hijo.id))}" class="text-center py-3 text-muted small">
-                            No hay registros de asistencia en el sistema escolar para este estudiante.
-                        </div>
-
-                        <div th:each="asist : ${asistenciasPorHijo.get(hijo.id)}" class="mobile-record-card">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div>
-                                    <div class="fw-bold text-dark fs-6" th:text="${#temporals.format(asist.fecha, 'dd/MM/yyyy')}">22/11/2026</div>
-                                    <small class="text-muted" style="font-size: 0.78rem;">
-                                        <span th:if="${asist.horaEntrada != null}" th:text="'Hora: ' + ${#temporals.format(asist.horaEntrada, 'HH:mm')}"></span>
-                                        <span th:unless="${asist.horaEntrada != null}">Sin marcar en puerta</span>
-                                    </small>
-                                </div>
-                                <div>
-                                    <span th:if="${asist.estado.name() == 'PUNTUAL' or asist.estado.name() == 'TEMPRANO'}" class="badge bg-success-subtle text-success border px-2 py-1 rounded-pill">
-                                        <i class="bi bi-check-circle-fill me-1"></i> Puntual
-                                    </span>
-                                    <span th:if="${asist.estado.name() == 'TARDANZA'}" class="badge bg-warning-subtle text-warning-emphasis border px-2 py-1 rounded-pill">
-                                        <i class="bi bi-clock-history me-1"></i> Tardanza
-                                    </span>
-                                    <span th:if="${asist.estado.name() == 'INASISTENCIA'}" class="badge bg-danger text-white px-2 py-1 rounded-pill shadow-sm">
-                                        <i class="bi bi-x-circle-fill me-1"></i> Falta
-                                    </span>
-                                    <span th:if="${asist.estado.name() == 'JUSTIFICADO'}" class="badge bg-info-subtle text-info border px-2 py-1 rounded-pill">
-                                        <i class="bi bi-shield-check me-1"></i> Justificada
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Botón o Estado de Justificación en Móvil -->
-                            <div class="mt-2 pt-2 border-top">
-                                <!-- Si ya tiene justificación registrada -->
-                                <div th:if="${justificacionesPorRegistro.containsKey(asist.id)}" class="text-center">
-                                    <span th:if="${justificacionesPorRegistro.get(asist.id).estado.name() == 'PENDIENTE'}" 
-                                          class="badge bg-warning text-dark px-3 py-2 rounded-pill w-100 d-block text-wrap">
-                                        <i class="bi bi-hourglass-split me-1"></i> En revisión por Dirección
-                                    </span>
-                                    <span th:if="${justificacionesPorRegistro.get(asist.id).estado.name() == 'APROBADA'}" 
-                                          class="badge bg-success px-3 py-2 rounded-pill w-100 d-block text-wrap">
-                                        <i class="bi bi-check-circle-fill me-1"></i> Aprobada (Falta Justificada)
-                                    </span>
-                                    <span th:if="${justificacionesPorRegistro.get(asist.id).estado.name() == 'RECHAZADA'}" 
-                                          class="badge bg-danger px-3 py-2 rounded-pill w-100 d-block text-wrap">
-                                        <i class="bi bi-x-circle-fill me-1"></i> Justificación Rechazada
-                                    </span>
-                                </div>
-
-                                <!-- Si NO tiene justificación aún -->
-                                <div th:unless="${justificacionesPorRegistro.containsKey(asist.id)}">
-                                    <div th:if="${asist.estado.name() == 'INASISTENCIA' and plazoValidoPorRegistro.get(asist.id)}">
-                                        <button type="button" class="btn btn-warning btn-sm rounded-pill w-100 py-2 shadow-sm fw-bold d-flex align-items-center justify-content-center gap-1"
-                                                th:data-registro-id="${asist.id}"
-                                                th:data-alumno="${hijo.nombreCompleto}"
-                                                th:data-fecha="${#temporals.format(asist.fecha, 'dd/MM/yyyy')}"
-                                                onclick="abrirModalJustificar(this)">
-                                            <i class="bi bi-file-earmark-arrow-up-fill fs-6"></i> Justificar Falta (48h)
-                                        </button>
-                                    </div>
-                                    <div th:if="${asist.estado.name() == 'INASISTENCIA' and !plazoValidoPorRegistro.get(asist.id)}" class="text-center">
-                                        <span class="badge bg-secondary-subtle text-secondary border px-3 py-2 rounded-pill w-100 d-block" style="font-size: 0.75rem;">
-                                            <i class="bi bi-clock-fill me-1"></i> Plazo legal de 48h vencido
-                                        </span>
-                                    </div>
-                                    <div th:if="${asist.estado.name() != 'INASISTENCIA'}" class="text-center text-muted small py-1">
-                                        Asistencia regular registrada
+                                        <h5 class="fw-bold text-dark mb-1" th:text="${c.titulo}">Reunión</h5>
+                                        <p class="text-dark small mb-3" style="white-space: pre-line;" th:text="${c.mensaje}">Mensaje...</p>
+                                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                            <small class="text-muted"><i class="bi bi-mortarboard-fill me-1"></i> Tutor: <strong th:text="${c.tutor != null ? c.tutor.nombreCompleto : 'Tutor de Aula'}">Tutor</strong></small>
+                                            <a th:if="${c.tieneArchivo()}" th:href="@{/padre/comunicados/{id}/adjunto(id=${c.id})}" target="_blank" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                                                <i class="bi bi-paperclip me-1"></i> Descargar Documento
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- PESTAÑA 4: REPORTES DE CONDUCTA -->
+                        <div class="tab-pane fade" th:id="'conducta-pane-' + ${hijo.id}" role="tabpanel">
+                            <div th:if="${reportesPorHijo.get(hijo.id) == null or #lists.isEmpty(reportesPorHijo.get(hijo.id))}" class="text-center py-4 text-muted">
+                                <i class="bi bi-shield-check display-4 text-success mb-2"></i>
+                                <h6 class="fw-bold text-success">¡Excelente conducta escolar!</h6>
+                                <p class="small mb-0">No se registran faltas ni llamadas de atención disciplinarias.</p>
+                            </div>
+
+                            <div th:unless="${reportesPorHijo.get(hijo.id) == null or #lists.isEmpty(reportesPorHijo.get(hijo.id))}" class="row g-3">
+                                <div class="col-12" th:each="r : ${reportesPorHijo.get(hijo.id)}">
+                                    <div class="card rounded-4 border p-3" th:classappend="${r.isGrave() ? 'border-danger bg-danger-subtle' : 'bg-light'}">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="badge rounded-pill px-3 py-1" th:classappend="${r.isGrave() ? 'bg-danger text-white' : 'bg-warning text-dark'}">
+                                                <i class="bi bi-exclamation-triangle-fill me-1"></i> <span th:text="${r.tipoFalta}">Falta</span>
+                                            </span>
+                                            <small class="text-muted" th:text="${#temporals.format(r.fechaIncidencia, 'dd/MM/yyyy')}">28/11/2026</small>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1" th:text="${r.titulo}">Motivo</h6>
+                                        <p class="text-dark small mb-2" th:text="${r.descripcion}">Descripción...</p>
+                                        <div class="p-2 rounded-3 bg-white border small mb-2" th:if="${r.medidasTomadas != null}">
+                                            <strong>Medidas acordadas:</strong> <span th:text="${r.medidasTomadas}">Medidas...</span>
+                                        </div>
+                                        <div th:if="${r.requiereCitacion}" class="alert alert-danger p-2 rounded-3 mb-0 small">
+                                            <strong><i class="bi bi-calendar-event-fill me-1"></i> CITACIÓN PRESENCIAL EN EL COLEGIO:</strong>
+                                            Por favor acercarse el <strong th:text="${r.fechaCitacion != null ? #temporals.format(r.fechaCitacion, 'dd/MM/yyyy a las HH:mm') : 'a la brevedad'}"></strong> para dialogar con el tutor.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                 </div>
@@ -308,18 +457,59 @@
 
     </div>
 
-    <!-- MODAL ÚNICO Y MODERNO DE JUSTIFICACIÓN (100% FUNCIONAL EN CELULAR Y COMPUTADORA) -->
-    <div class="modal fade" id="modalJustificarGlobal" tabindex="-1" aria-labelledby="modalJustificarLabel" aria-hidden="true">
+    <!-- MODAL: CAMBIAR PARENTESCO (MADRE, PADRE, APODERADO LEGAL) -->
+    <div class="modal fade" id="modalParentesco" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <form th:action="@{/padre/actualizar-parentesco}" method="post">
+                    <div class="modal-header bg-danger text-white rounded-top-4 py-3">
+                        <h5 class="modal-title fw-bold fs-6">
+                            <i class="bi bi-people-fill me-2"></i>Definir Rol de Parentesco
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4 text-start">
+                        <p class="small text-muted mb-3">Indique cómo se identifica usted respecto a sus hijos para adaptar la plataforma y las firmas de los informes:</p>
+                        <div class="form-check p-3 rounded-3 border mb-2" style="background-color: #fdf2f8;">
+                            <input class="form-check-input" type="radio" name="parentesco" id="parMadre" value="MADRE" th:checked="${apoderado.parentesco == 'MADRE'}">
+                            <label class="form-check-label fw-bold text-danger ms-2" for="parMadre">
+                                <i class="bi bi-heart-fill me-1"></i> Mamá (Madre de Familia)
+                            </label>
+                        </div>
+                        <div class="form-check p-3 rounded-3 border mb-2" style="background-color: #eff6ff;">
+                            <input class="form-check-input" type="radio" name="parentesco" id="parPadre" value="PADRE" th:checked="${apoderado.parentesco == 'PADRE'}">
+                            <label class="form-check-label fw-bold text-primary ms-2" for="parPadre">
+                                <i class="bi bi-person-fill me-1"></i> Papá (Padre de Familia)
+                            </label>
+                        </div>
+                        <div class="form-check p-3 rounded-3 border mb-2" style="background-color: #f8fafc;">
+                            <input class="form-check-input" type="radio" name="parentesco" id="parApoderado" value="APODERADO_LEGAL" th:checked="${apoderado.parentesco != 'MADRE' and apoderado.parentesco != 'PADRE'}">
+                            <label class="form-check-label fw-bold text-secondary ms-2" for="parApoderado">
+                                <i class="bi bi-shield-check me-1"></i> Apoderado(a) Legal / Tutor
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-3 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold bg-jeshua shadow-sm">Guardar Rol</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE JUSTIFICACIÓN DE INASISTENCIA (48H) -->
+    <div class="modal fade" id="modalJustificarGlobal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
             <div class="modal-content rounded-4 border-0 shadow">
                 <form th:action="@{/padre/justificar}" method="post" enctype="multipart/form-data" id="formJustificar">
                     <input type="hidden" name="registroId" id="modalRegistroId" value="">
                     
                     <div class="modal-header bg-danger text-white rounded-top-4 py-3">
-                        <h5 class="modal-title fw-bold fs-6 fs-sm-5" id="modalJustificarLabel">
+                        <h5 class="modal-title fw-bold fs-6" id="modalJustificarLabel">
                             <i class="bi bi-file-earmark-medical me-2"></i>Justificar Inasistencia
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     
                     <div class="modal-body p-3 p-sm-4 text-start">
@@ -328,12 +518,11 @@
                             <strong>Plazo legal de 48 horas activo.</strong> Su documento y motivo serán revisados por Dirección.
                         </div>
 
-                        <!-- Ficha de Datos del Alumno y Fecha -->
                         <div class="mb-3 bg-light p-3 rounded-3 border">
                             <div class="small text-muted mb-1">Estudiante:</div>
-                            <div class="fw-bold text-dark fs-6" id="modalAlumnoNombre">Lucas Quispe Mendoza</div>
+                            <div class="fw-bold text-dark fs-6" id="modalAlumnoNombre">-</div>
                             <div class="small text-muted mt-2 mb-1">Fecha de Falta:</div>
-                            <div class="fw-bold text-danger" id="modalFechaFalta">22/11/2026</div>
+                            <div class="fw-bold text-danger" id="modalFechaFalta">-</div>
                         </div>
 
                         <div class="mb-3">
@@ -351,7 +540,7 @@
                             <input type="file" class="form-control form-control-lg" name="archivo" id="modalArchivo" 
                                    accept="image/*,application/pdf,.pdf,.png,.jpg,.jpeg">
                             <div class="form-text small mt-1">
-                                <i class="bi bi-camera-fill text-danger me-1"></i> En su celular puede <strong>tomar una foto directa con la cámara</strong> o adjuntar un archivo PDF/imagen (receta médica, constancia, etc.).
+                                <i class="bi bi-camera-fill text-danger me-1"></i> Puede tomar una foto con la cámara o adjuntar constancia médica / justificante.
                             </div>
                         </div>
                     </div>
@@ -370,7 +559,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
+    <script th:inline="javascript">
         function abrirModalJustificar(btn) {
             const id = btn.getAttribute('data-registro-id');
             const alumno = btn.getAttribute('data-alumno');
@@ -386,6 +575,50 @@
             const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
             modal.show();
         }
+
+        // SISTEMA DE NOTIFICACIONES PUSH EN EL NAVEGADOR (WEB NOTIFICATIONS API)
+        const alertasPush = /*[[${alertasPush}]]*/ [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const banner = document.getElementById('bannerNotificaciones');
+            const btnActivar = document.getElementById('btnActivarNotificaciones');
+
+            if ('Notification' in window) {
+                if (Notification.permission === 'default') {
+                    if (banner) banner.style.setProperty('display', 'flex', 'important');
+                } else if (Notification.permission === 'granted') {
+                    lanzarAlertas();
+                }
+
+                if (btnActivar) {
+                    btnActivar.addEventListener('click', function() {
+                        Notification.requestPermission().then(function(perm) {
+                            if (perm === 'granted') {
+                                if (banner) banner.style.setProperty('display', 'none', 'important');
+                                new Notification('I.E.P. Internacional Jeshua', {
+                                    body: '¡Notificaciones activadas! Recibirá avisos de tareas y comunicados de los tutores.',
+                                    icon: '/logo-colegio'
+                                });
+                                lanzarAlertas();
+                            } else {
+                                if (banner) banner.style.setProperty('display', 'none', 'important');
+                            }
+                        });
+                    });
+                }
+            }
+
+            function lanzarAlertas() {
+                if (alertasPush && alertasPush.length > 0) {
+                    // Mostrar primera alerta de novedad relevante
+                    const mensaje = alertasPush[0];
+                    new Notification('I.E.P. Internacional Jeshua', {
+                        body: mensaje,
+                        icon: '/logo-colegio'
+                    });
+                }
+            }
+        });
     </script>
 </body>
 </html>

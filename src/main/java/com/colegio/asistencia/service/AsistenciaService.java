@@ -44,17 +44,31 @@ public class AsistenciaService {
         this.emailService = emailService;
     }
 
+    private String limpiarCodigo(String raw) {
+        if (raw == null) return "";
+        String c = raw.trim();
+        if (c.contains("/")) {
+            c = c.substring(c.lastIndexOf('/') + 1);
+        }
+        if (c.contains("=")) {
+            c = c.substring(c.lastIndexOf('=') + 1);
+        }
+        return c.trim();
+    }
+
     @Transactional
     public RegistroAsistencia registrarEntradaPorQr(String codigoQr, String usernameAuxiliar) {
-        Estudiante estudiante = estudianteRepository.findByCodigoQr(codigoQr.trim())
-                .orElseThrow(() -> new IllegalArgumentException("Código QR inválido o no reconocido."));
+        String codigoLimpio = limpiarCodigo(codigoQr);
+        Estudiante estudiante = estudianteRepository.findByCodigoQr(codigoLimpio)
+                .or(() -> estudianteRepository.findByDni(codigoLimpio))
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró ningún estudiante con el código QR o DNI: " + codigoLimpio));
 
         if (!Boolean.TRUE.equals(estudiante.getActivo())) {
-            throw new IllegalStateException("El estudiante se encuentra inactivo.");
+            throw new IllegalStateException("El estudiante " + estudiante.getNombreCompleto() + " se encuentra inactivo en el sistema.");
         }
 
-        Matricula matricula = matriculaRepository.findByEstudianteCodigoQrAndAnioEscolarActivoTrue(codigoQr.trim())
-                .orElseThrow(() -> new IllegalStateException("El estudiante no cuenta con matrícula activa para el año lectivo."));
+        Matricula matricula = matriculaRepository.findByEstudianteIdAndAnioEscolarActivoTrue(estudiante.getId())
+                .orElseThrow(() -> new IllegalStateException("El estudiante " + estudiante.getNombreCompleto() + " no cuenta con matrícula activa para el año lectivo."));
 
         LocalDate hoy = FechaUtil.hoyPeru();
         LocalTime ahora = FechaUtil.ahoraHoraPeru();
@@ -62,7 +76,11 @@ public class AsistenciaService {
         // Validar si ya registró asistencia hoy
         Optional<RegistroAsistencia> existenteOpt = asistenciaRepository.findByEstudianteIdAndFecha(estudiante.getId(), hoy);
         if (existenteOpt.isPresent()) {
-            throw new IllegalStateException("El estudiante " + estudiante.getNombreCompleto() + " ya cuenta con registro de entrada para el día de hoy.");
+            RegistroAsistencia yaRegistrado = existenteOpt.get();
+            String horaIngreso = yaRegistrado.getHoraEntrada() != null 
+                    ? yaRegistrado.getHoraEntrada().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"))
+                    : "hora registrada";
+            throw new IllegalStateException(estudiante.getNombreCompleto() + " ya ingresó hoy a las " + horaIngreso + ". (Para marcar salida, use la opción 'REGISTRAR SALIDA').");
         }
 
         // Buscar horario correspondiente al nivel y turno del estudiante
@@ -108,14 +126,20 @@ public class AsistenciaService {
 
     @Transactional
     public RegistroAsistencia registrarSalidaPorQr(String codigoQr, String usernameAuxiliar) {
+        String codigoLimpio = limpiarCodigo(codigoQr);
+        Estudiante estudiante = estudianteRepository.findByCodigoQr(codigoLimpio)
+                .or(() -> estudianteRepository.findByDni(codigoLimpio))
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró ningún estudiante con el código QR o DNI: " + codigoLimpio));
+
         LocalDate hoy = FechaUtil.hoyPeru();
         LocalTime ahora = FechaUtil.ahoraHoraPeru();
 
-        RegistroAsistencia registro = asistenciaRepository.findByEstudianteCodigoQrAndFecha(codigoQr.trim(), hoy)
-                .orElseThrow(() -> new IllegalStateException("No existe un registro de entrada para este estudiante el día de hoy. Debe registrar su entrada primero."));
+        RegistroAsistencia registro = asistenciaRepository.findByEstudianteIdAndFecha(estudiante.getId(), hoy)
+                .orElseThrow(() -> new IllegalStateException("No existe un registro de entrada para " + estudiante.getNombreCompleto() + " el día de hoy. Debe registrar su entrada primero."));
 
         if (registro.getHoraSalida() != null) {
-            throw new IllegalStateException("El estudiante ya registró su salida a las " + registro.getHoraSalida());
+            String horaSalidaStr = registro.getHoraSalida().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+            throw new IllegalStateException(estudiante.getNombreCompleto() + " ya registró su salida hoy a las " + horaSalidaStr);
         }
 
         registro.setHoraSalida(ahora);
@@ -157,5 +181,31 @@ public class AsistenciaService {
         stats.put("justificacionesPendientes", justificacionesPendientes);
 
         return stats;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> obtenerTendenciaUltimosDias(int dias) {
+        LocalDate fin = FechaUtil.hoyPeru();
+        LocalDate inicio = fin.minusDays(dias - 1);
+        List<Map<String, Object>> lista = new ArrayList<>();
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM");
+
+        for (LocalDate d = inicio; !d.isAfter(fin); d = d.plusDays(1)) {
+            Map<String, Object> item = new HashMap<>();
+            long punt = asistenciaRepository.countByFechaAndEstado(d, EstadoPuntualidad.PUNTUAL)
+                    + asistenciaRepository.countByFechaAndEstado(d, EstadoPuntualidad.TEMPRANO);
+            long tard = asistenciaRepository.countByFechaAndEstado(d, EstadoPuntualidad.TARDANZA);
+            long falt = asistenciaRepository.countByFechaAndEstado(d, EstadoPuntualidad.INASISTENCIA);
+            long just = asistenciaRepository.countByFechaAndEstado(d, EstadoPuntualidad.JUSTIFICADO);
+
+            item.put("fecha", d.format(fmt));
+            item.put("puntuales", punt);
+            item.put("tardanzas", tard);
+            item.put("inasistencias", falt);
+            item.put("justificados", just);
+            item.put("total", punt + tard + falt + just);
+            lista.add(item);
+        }
+        return lista;
     }
 }

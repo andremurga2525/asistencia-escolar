@@ -43,6 +43,7 @@ public class AdminDashboardController {
         // 1. Estadísticas calculadas directamente de MySQL 8.4
         Map<String, Object> stats = asistenciaService.obtenerEstadisticasDashboard(hoy);
         model.addAttribute("stats", stats);
+        model.addAttribute("tendenciaSemanal", asistenciaService.obtenerTendenciaUltimosDias(7));
 
         // 2. Registros de asistencia de hoy
         List<RegistroAsistencia> asistenciasHoy = asistenciaRepository.findByFechaOrderByHoraEntradaAsc(hoy);

@@ -37,7 +37,10 @@ public class DataInitializer {
             ApoderadoRepository apoderadoRepository,
             MatriculaRepository matriculaRepository,
             RegistroAsistenciaRepository asistenciaRepository,
-            JustificacionInasistenciaRepository justificacionRepository) {
+            JustificacionInasistenciaRepository justificacionRepository,
+            TareaEscolarRepository tareaRepository,
+            ComunicadoAulaRepository comunicadoRepository,
+            ReporteConductaRepository reporteConductaRepository) {
         return args -> {
             // Asegurar que las columnas en MySQL permitan valores ampliados (evita Data truncation)
             try {
@@ -59,6 +62,13 @@ public class DataInitializer {
                 jeshua.setColorPrimario("#b91c1c");
                 jeshua.setColorSecundario("#ffffff");
                 configuracionRepository.save(jeshua);
+            } else {
+                configuracionRepository.findFirstByActivoTrue().ifPresent(cfg -> {
+                    if (cfg.getLogoUrl() != null && cfg.getLogoUrl().toLowerCase().contains("facebook")) {
+                        cfg.setLogoUrl(null);
+                        configuracionRepository.save(cfg);
+                    }
+                });
             }
 
             // 2. Roles del Sistema Escolar
@@ -69,10 +79,12 @@ public class DataInitializer {
                 }
             }
 
-            // 3. Usuarios Principales (Admin y Auxiliar)
+            // 3. Usuarios Principales (Admin, Auxiliar, Profesor y Tutor)
             Rol rolAdmin = rolRepository.findByNombre(EnumRol.ROLE_ADMIN).orElse(null);
             Rol rolAuxiliar = rolRepository.findByNombre(EnumRol.ROLE_AUXILIAR).orElse(null);
             Rol rolPadre = rolRepository.findByNombre(EnumRol.ROLE_PADRE).orElse(null);
+            Rol rolProfesor = rolRepository.findByNombre(EnumRol.ROLE_PROFESOR).orElse(null);
+            Rol rolTutor = rolRepository.findByNombre(EnumRol.ROLE_TUTOR).orElse(null);
 
             Usuario adminUser = null;
             if (!usuarioRepository.existsByUsername("admin") && rolAdmin != null) {
@@ -92,6 +104,27 @@ public class DataInitializer {
                 auxiliarUser = usuarioRepository.save(auxiliarUser);
             } else {
                 auxiliarUser = usuarioRepository.findByUsername("auxiliar").orElse(null);
+            }
+
+            Usuario profesorUser = null;
+            if (!usuarioRepository.existsByUsername("profesor") && rolProfesor != null) {
+                profesorUser = new Usuario("profesor", passwordEncoder.encode("profesor123"), "Prof. Roberto Morales (Docente)", "profesor@internacionaljeshua.edu.pe");
+                profesorUser.setTelefono("+51 974 555 777");
+                profesorUser.agregarRol(rolProfesor);
+                profesorUser = usuarioRepository.save(profesorUser);
+            } else {
+                profesorUser = usuarioRepository.findByUsername("profesor").orElse(null);
+            }
+
+            Usuario tutorUser = null;
+            if (!usuarioRepository.existsByUsername("tutor") && rolTutor != null) {
+                tutorUser = new Usuario("tutor", passwordEncoder.encode("tutor123"), "Lic. Carmen Delgado (Tutora 1° Primaria)", "tutor@internacionaljeshua.edu.pe");
+                tutorUser.setTelefono("+51 974 777 999");
+                tutorUser.agregarRol(rolTutor);
+                if (rolProfesor != null) tutorUser.agregarRol(rolProfesor);
+                tutorUser = usuarioRepository.save(tutorUser);
+            } else {
+                tutorUser = usuarioRepository.findByUsername("tutor").orElse(null);
             }
 
             // 4. Ano Escolar Oficial
@@ -261,8 +294,9 @@ public class DataInitializer {
 
             // 10. Registros de Asistencia: HOY (Estadisticas de Dashboard)
             LocalDate hoy = FechaUtil.hoyPeru();
-            if (lucas != null && matLucas != null && asistenciaRepository.findByEstudianteIdAndFecha(lucas.getId(), hoy).isEmpty()) {
-                asistenciaRepository.save(new RegistroAsistencia(lucas, anio2026, matLucas, hoy, LocalTime.of(7, 25), EstadoPuntualidad.PUNTUAL, auxiliarUser));
+            // Lucas Quispe se mantiene disponible y sin registro de hoy para permitir pruebas inmediatas en el escáner
+            if (sofia != null && matSofia != null && asistenciaRepository.findByEstudianteIdAndFecha(sofia.getId(), hoy).isEmpty()) {
+                asistenciaRepository.save(new RegistroAsistencia(sofia, anio2026, matSofia, hoy, LocalTime.of(7, 20), EstadoPuntualidad.PUNTUAL, auxiliarUser));
             }
             if (valeria != null && matValeria != null && asistenciaRepository.findByEstudianteIdAndFecha(valeria.getId(), hoy).isEmpty()) {
                 RegistroAsistencia regValeria = new RegistroAsistencia(valeria, anio2026, matValeria, hoy, LocalTime.of(7, 35), EstadoPuntualidad.TARDANZA, auxiliarUser);
@@ -285,8 +319,7 @@ public class DataInitializer {
                 justificacionRepository.save(justificacion);
             }
 
-            // 5 Alumnos de Juan Quispe con INASISTENCIA SIN JUSTIFICAR (Dentro de 48h)
-            // Listos para que el usuario entre como padre (10234567 / padre123) y pruebe el boton "Justificar Falta (48h)"
+            // Alumnos de Juan Quispe con INASISTENCIA SIN JUSTIFICAR (Dentro de 48h)
             RegistroAsistencia asisLucas = asegurarInasistencia(asistenciaRepository, lucas, anio2026, matLucas, ayer, auxiliarUser);
             limpiarJustificacion(justificacionRepository, asisLucas);
 
@@ -309,7 +342,69 @@ public class DataInitializer {
             RegistroAsistencia asisSofiaAyer = asegurarInasistencia(asistenciaRepository, sofia, anio2026, matSofia, ayer, auxiliarUser);
             limpiarJustificacion(justificacionRepository, asisSofiaAyer);
 
-            log.info("5 inasistencias listas dentro del plazo legal de 48 horas para pruebas de justificacion con el apoderado 10234567.");
+            // 12. Tareas Escolares de Ejemplo (Módulo de Profesores)
+            if (tareaRepository.count() == 0 && g1Primaria != null && sec1A != null && profesorUser != null) {
+                TareaEscolar tareaMat = new TareaEscolar(
+                        "Ficha N° 4: Operaciones de Suma y Resta con Llevada",
+                        "Matemáticas",
+                        "Desarrollar los problemas 1 al 10 de la ficha de trabajo entregada en clase. Graficar las operaciones en el cuaderno y presentar con pulcritud.",
+                        g1Primaria,
+                        sec1A,
+                        profesorUser,
+                        hoy.plusDays(2)
+                );
+                tareaRepository.save(tareaMat);
+
+                TareaEscolar tareaCom = new TareaEscolar(
+                        "Comprensión Lectora: 'El Árbol Generoso'",
+                        "Comunicación Integral",
+                        "Leer el cuento de la página 32 y responder las 4 preguntas de inferencia en el cuaderno de trabajo.",
+                        g1Primaria,
+                        sec1A,
+                        profesorUser,
+                        hoy.plusDays(3)
+                );
+                tareaRepository.save(tareaCom);
+            }
+
+            // 13. Comunicados Oficiales de Aula (Módulo de Tutores)
+            if (comunicadoRepository.count() == 0 && g1Primaria != null && sec1A != null && tutorUser != null) {
+                ComunicadoAula comUrgente = new ComunicadoAula(
+                        "Reunión Extraordinaria de Entrega de Informes y Boletas",
+                        "Estimados padres de familia de 1° de Primaria: Se les convoca con carácter de URGENCIA a la asamblea este viernes a las 4:30 PM en el aula para la entrega de boletas de notas y coordinación pedagógica.",
+                        "URGENTE",
+                        g1Primaria,
+                        sec1A,
+                        tutorUser
+                );
+                comunicadoRepository.save(comUrgente);
+
+                ComunicadoAula comCampana = new ComunicadoAula(
+                        "Campaña Preventiva de Salud Bucal y Fluorización",
+                        "Se informa que el martes próximo se realizará la jornada gratuita de despistaje y fluorización con el personal del Centro de Salud. Por favor enviar el cepillo dental del estudiante.",
+                        "NORMAL",
+                        g1Primaria,
+                        sec1A,
+                        tutorUser
+                );
+                comunicadoRepository.save(comCampana);
+            }
+
+            // 14. Reportes de Conducta Escolar (Módulo de Tutores)
+            if (reporteConductaRepository.count() == 0 && lucas != null && tutorUser != null) {
+                ReporteConducta rep = new ReporteConducta(
+                        lucas,
+                        tutorUser,
+                        "LLAMADA_ATENCION",
+                        "Distracción en horario de clase y olvido de materiales",
+                        "El estudiante estuvo distraído durante la clase de matemáticas conversando y no trajo su cartuchera de útiles por segunda vez consecutiva."
+                );
+                rep.setMedidasTomadas("Se dialogó con el estudiante en privado, comprometiéndose a prestar atención y revisar su mochila antes de salir de casa.");
+                rep.setRequiereCitacion(false);
+                reporteConductaRepository.save(rep);
+            }
+
+            log.info("Datos de inicialización completados exitosamente (Usuarios, Tareas, Comunicados, Conducta y Roles).");
         };
     }
 

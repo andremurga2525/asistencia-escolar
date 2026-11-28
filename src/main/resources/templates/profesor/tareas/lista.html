@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tareas Escolares - Portal Docente - I.E.P. Internacional Jeshua</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <!-- Navbar del Docente / Tutor -->
+    <div th:replace="~{fragments/profesor_nav :: navbar('tareas')}"></div>
+
+    <div class="container py-4">
+
+        <!-- Mensajes Flash -->
+        <div th:if="${mensajeExito}" class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i> <span th:text="${mensajeExito}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${mensajeError}" class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i> <span th:text="${mensajeError}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4 p-4 mb-4 bg-white">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div>
+                    <h4 class="fw-bold text-dark mb-1"><i class="bi bi-journal-bookmark-fill text-danger me-2"></i>Gestión de Tareas Escolares</h4>
+                    <p class="text-muted small mb-0">Publique tareas, prácticas domiciliarias y adjunte archivos PDF o imágenes para sus alumnos y apoderados.</p>
+                </div>
+                <a th:href="@{/profesor/tareas/nueva}" class="btn btn-danger rounded-pill px-4 shadow-sm fw-bold" style="background-color: #b91c1c;">
+                    <i class="bi bi-plus-circle me-1"></i> Asignar Nueva Tarea
+                </a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+            <div th:if="${#lists.isEmpty(tareas)}" class="text-center py-5 text-muted">
+                <i class="bi bi-clipboard2-x display-3 text-secondary mb-3"></i>
+                <h5 class="fw-bold">No hay tareas escolares registradas</h5>
+                <p class="small mb-3">Haga clic en el botón superior para crear la primera tarea de su curso.</p>
+                <a th:href="@{/profesor/tareas/nueva}" class="btn btn-outline-danger rounded-pill px-4">
+                    <i class="bi bi-plus-lg me-1"></i> Crear Tarea Ahora
+                </a>
+            </div>
+
+            <div class="table-responsive" th:unless="${#lists.isEmpty(tareas)}">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Materia / Título</th>
+                            <th>Grado y Sección</th>
+                            <th>Docente</th>
+                            <th>Fecha Entrega</th>
+                            <th>Adjunto</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="t : ${tareas}">
+                            <td>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1 small" th:text="${t.materia}">Matemáticas</span>
+                                <h6 class="fw-bold text-dark mt-1 mb-1" th:text="${t.titulo}">Ficha 1</h6>
+                                <p class="text-muted small mb-0 text-truncate" style="max-width: 280px;" th:text="${t.descripcion}">Indicaciones...</p>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary-subtle text-secondary border rounded-pill px-2 py-1" th:text="${t.grado.nombre + ' - Aula ' + t.seccion.nombre}">1° Primaria A</span>
+                            </td>
+                            <td>
+                                <small class="text-dark fw-semibold" th:text="${t.profesor != null ? t.profesor.nombreCompleto : 'Docente'}">Prof. Roberto</small>
+                            </td>
+                            <td>
+                                <span th:if="${t.isVencida()}" class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1">
+                                    <i class="bi bi-clock-history me-1"></i> Vencida (<span th:text="${#temporals.format(t.fechaEntrega, 'dd/MM/yyyy')}"></span>)
+                                </span>
+                                <span th:unless="${t.isVencida()}" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">
+                                    <i class="bi bi-calendar-check me-1"></i> <span th:text="${#temporals.format(t.fechaEntrega, 'dd/MM/yyyy')}">01/12/2026</span>
+                                </span>
+                            </td>
+                            <td>
+                                <a th:if="${t.tieneArchivo()}" th:href="@{/profesor/tareas/{id}/adjunto(id=${t.id})}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-2 py-1">
+                                    <i class="bi bi-paperclip me-1"></i> <span th:text="${t.archivoAdjuntoNombre != null ? t.archivoAdjuntoNombre : 'Descargar'}">Archivo</span>
+                                </a>
+                                <span th:unless="${t.tieneArchivo()}" class="text-muted small">Sin adjunto</span>
+                            </td>
+                            <td class="text-end">
+                                <form th:action="@{/profesor/tareas/{id}/eliminar(id=${t.id})}" method="post" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar esta tarea escolar?');">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" title="Eliminar Tarea">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

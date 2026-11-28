@@ -16,5 +16,7 @@ public interface MatriculaRepository extends JpaRepository<Matricula, Long> {
 
     Optional<Matricula> findByEstudianteIdAndAnioEscolarActivoTrue(Long estudianteId);
 
+    List<Matricula> findBySeccionIdAndAnioEscolarActivoTrue(Long seccionId);
+
     List<Matricula> findByAnioEscolarActivoTrue();
 }

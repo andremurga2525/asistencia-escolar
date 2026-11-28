@@ -311,9 +311,11 @@
 
     <!-- SCRIPT DE CONTROL DE CÁMARA Y AUDIO WEB API -->
     <script>
-        // Token CSRF de Spring Security
-        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        // Token CSRF de Spring Security con validación de nulidad para evitar excepciones
+        const csrfMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+        const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : 'X-CSRF-TOKEN';
 
         let html5QrCode = null;
         let isScanning = false;
@@ -403,21 +405,26 @@
             }
 
             try {
-                const cameras = await Html5Qrcode.getCameras();
-                const cameraSelect = document.getElementById('cameraSelection');
-                cameraSelect.innerHTML = "";
+                let cameraConfig = { facingMode: "environment" };
+                try {
+                    const cameras = await Html5Qrcode.getCameras();
+                    const cameraSelect = document.getElementById('cameraSelection');
+                    cameraSelect.innerHTML = "";
 
-                if (cameras && cameras.length > 0) {
-                    cameras.forEach((cam, idx) => {
-                        const opt = document.createElement('option');
-                        opt.value = cam.id;
-                        opt.text = cam.label || `Cámara ${idx + 1}`;
-                        cameraSelect.appendChild(opt);
-                    });
-                    cameraSelect.disabled = false;
+                    if (cameras && cameras.length > 0) {
+                        cameras.forEach((cam, idx) => {
+                            const opt = document.createElement('option');
+                            opt.value = cam.id;
+                            opt.text = cam.label || `Cámara ${idx + 1}`;
+                            cameraSelect.appendChild(opt);
+                        });
+                        cameraSelect.disabled = false;
+                        const backCam = cameras.find(c => c.label && (c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('trasera') || c.label.toLowerCase().includes('rear') || c.label.toLowerCase().includes('environment')));
+                        cameraConfig = cameraId || (backCam ? backCam.id : cameras[cameras.length - 1].id);
+                    }
+                } catch(camErr) {
+                    console.log("No se pudo enumerar dispositivos directamente, usando facingMode environment:", camErr);
                 }
-
-                const selectedCamera = cameraId || (cameras.length > 0 ? cameras[cameras.length - 1].id : { facingMode: "environment" });
 
                 placeholder.style.display = 'none';
                 laser.style.display = 'block';
@@ -426,7 +433,7 @@
                 document.getElementById('btnStopCamera').disabled = false;
 
                 await html5QrCode.start(
-                    selectedCamera,
+                    cameraConfig,
                     {
                         fps: 15,
                         qrbox: { width: 250, height: 250 },
@@ -446,7 +453,7 @@
                 laser.style.display = 'none';
                 statusBadge.className = 'badge bg-danger rounded-pill px-3 py-1';
                 statusBadge.textContent = 'Permiso denegado / Sin cámara';
-                alert("No se pudo iniciar la cámara: Asegúrese de haber otorgado permisos de cámara en su navegador.");
+                alert("No se pudo iniciar la cámara: Asegúrese de haber otorgado permisos de cámara en su navegador (ícono del candado junto a la URL).");
             }
         }
 
@@ -532,8 +539,17 @@
                     hudTitle.textContent = '¡AVISO DE ASISTENCIA!';
                     hudAlumno.textContent = data.mensaje;
                     hudAlumno.className = 'fw-bold mb-1 text-white';
-                    hudDetalle.textContent = `Código escaneado: ${codigo}`;
-                    hudDetalle.className = 'small text-white-50 mb-0';
+
+                    // Si ya ingresó hoy, ofrecer botón directo para registrar su salida
+                    if (data.mensaje && data.mensaje.includes('ya ingresó hoy')) {
+                        hudDetalle.innerHTML = `<span class="small text-white-50">Código: ${codigo}</span><br>
+                            <button type="button" class="btn btn-warning btn-sm mt-2 fw-bold rounded-pill text-dark shadow-sm px-3" onclick="marcarSalidaDirecta('${codigo}')">
+                                <i class="bi bi-box-arrow-right me-1"></i> Marcar Salida Ahora de este alumno
+                            </button>`;
+                    } else {
+                        hudDetalle.textContent = `Código escaneado: ${codigo}`;
+                        hudDetalle.className = 'small text-white-50 mb-0';
+                    }
                     hudHora.textContent = new Date().toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour12: false });
                 }
 
@@ -544,6 +560,11 @@
                 hudTitle.textContent = 'Error de conexión';
                 hudAlumno.textContent = 'No se pudo comunicar con el servidor escolar.';
             }
+        }
+
+        function marcarSalidaDirecta(codigo) {
+            document.getElementById('btnSalida').checked = true;
+            procesarCodigo(codigo);
         }
 
         function agregarFilaTabla(data) {

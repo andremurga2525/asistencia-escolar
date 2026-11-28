@@ -55,6 +55,7 @@ public class SecurityConfig {
                         ).permitAll()
                         // Restricciones estrictas por ROL
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/profesor/**").hasAnyRole("PROFESOR", "TUTOR", "ADMIN")
                         .requestMatchers("/auxiliar/**").hasAnyRole("AUXILIAR", "ADMIN")
                         .requestMatchers("/padre/**").hasRole("PADRE")
                         // Cualquier otra solicitud requiere estar autenticado

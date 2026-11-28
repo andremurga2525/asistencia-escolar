@@ -178,6 +178,20 @@
                     <span>Horarios y Tolerancia</span>
                 </a>
 
+                <div class="sidebar-section-title">Docencia y Tutoría</div>
+                <a th:href="@{/profesor/tareas}" class="nav-link" th:classappend="${activeTab == 'tareas' ? 'active' : ''}">
+                    <i class="bi bi-journal-bookmark-fill fs-5 text-warning"></i>
+                    <span>Tareas Escolares</span>
+                </a>
+                <a th:href="@{/profesor/comunicados}" class="nav-link" th:classappend="${activeTab == 'comunicados' ? 'active' : ''}">
+                    <i class="bi bi-megaphone-fill fs-5 text-info"></i>
+                    <span>Comunicados de Aula</span>
+                </a>
+                <a th:href="@{/profesor/conducta}" class="nav-link" th:classappend="${activeTab == 'conducta' ? 'active' : ''}">
+                    <i class="bi bi-shield-exclamation fs-5 text-danger"></i>
+                    <span>Reportes de Conducta</span>
+                </a>
+
                 <div class="sidebar-section-title">Control de Asistencia</div>
                 <a th:href="@{/admin/justificaciones}" class="nav-link" th:classappend="${activeTab == 'justificaciones' ? 'active' : ''}">
                     <i class="bi bi-file-earmark-medical-fill fs-5"></i>

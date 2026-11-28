@@ -91,11 +91,15 @@ public class AuthController {
                         .body(config.getLogoData());
             }
 
-            // 2. Si se configuró un enlace URL web externo (https://...)
+            // 2. Si se configuró un enlace URL web externo directo a una imagen (evitar facebook u otras páginas html)
             if (config.getLogoUrl() != null && (config.getLogoUrl().startsWith("http://") || config.getLogoUrl().startsWith("https://"))) {
-                return ResponseEntity.status(HttpStatus.FOUND)
-                        .location(URI.create(config.getLogoUrl()))
-                        .build();
+                String urlLower = config.getLogoUrl().toLowerCase();
+                boolean esUrlBloqueada = urlLower.contains("facebook.com") || urlLower.contains("fb.com") || urlLower.contains("instagram.com");
+                if (!esUrlBloqueada && (urlLower.endsWith(".png") || urlLower.endsWith(".jpg") || urlLower.endsWith(".jpeg") || urlLower.endsWith(".webp") || urlLower.endsWith(".svg") || urlLower.contains("cloudinary") || urlLower.contains("imgur") || urlLower.contains("googleusercontent"))) {
+                    return ResponseEntity.status(HttpStatus.FOUND)
+                            .location(URI.create(config.getLogoUrl()))
+                            .build();
+                }
             }
         }
 

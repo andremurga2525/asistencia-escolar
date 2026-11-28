@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Docente y Tutoría - I.E.P. Internacional Jeshua</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        .card-metric {
+            border-radius: 1.25rem;
+            transition: transform 0.2s;
+        }
+        .card-metric:hover {
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Navbar del Docente / Tutor -->
+    <div th:replace="~{fragments/profesor_nav :: navbar('dashboard')}"></div>
+
+    <div class="container py-4">
+
+        <!-- Mensajes Flash -->
+        <div th:if="${mensajeExito}" class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i> <span th:text="${mensajeExito}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${mensajeError}" class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i> <span th:text="${mensajeError}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Encabezado de Bienvenida -->
+        <div class="card shadow-sm border-0 rounded-4 p-4 mb-4" style="background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%); color: white;">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div>
+                    <span class="badge bg-white text-danger px-3 py-1 rounded-pill fw-bold mb-2 shadow-sm">
+                        <i class="bi bi-mortarboard-fill me-1"></i> Módulo Pedagógico & Tutoría
+                    </span>
+                    <h3 class="fw-bold mb-1">¡Bienvenido(a), <span th:text="${usuario != null ? usuario.nombreCompleto : 'Docente'}">Profesor</span>!</h3>
+                    <p class="mb-0 text-white-50 small">Gestione tareas escolares con archivos adjuntos, comunicados oficiales de aula y reportes de conducta estudiantil con envío directo al correo de los apoderados.</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:href="@{/profesor/tareas/nueva}" class="btn btn-light rounded-pill px-3 fw-bold text-danger shadow-sm">
+                        <i class="bi bi-plus-circle-fill me-1"></i> Asignar Tarea
+                    </a>
+                    <a th:href="@{/profesor/comunicados/nuevo}" class="btn btn-warning rounded-pill px-3 fw-bold text-dark shadow-sm">
+                        <i class="bi bi-megaphone-fill me-1"></i> Emitir Comunicado
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métricas Rápidas -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-4">
+                <div class="card card-metric shadow-sm border-0 border-start border-4 border-danger p-3 bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small fw-semibold text-uppercase">Tareas Asignadas</span>
+                            <h2 class="fw-bold text-danger mb-0 mt-1" th:text="${totalTareas}">0</h2>
+                            <a th:href="@{/profesor/tareas}" class="small text-danger text-decoration-none">Ver todas &rarr;</a>
+                        </div>
+                        <div class="p-3 bg-danger-subtle text-danger rounded-circle fs-3">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="card card-metric shadow-sm border-0 border-start border-4 border-warning p-3 bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small fw-semibold text-uppercase">Comunicados Emitidos</span>
+                            <h2 class="fw-bold text-warning-emphasis mb-0 mt-1" th:text="${totalComunicados}">0</h2>
+                            <a th:href="@{/profesor/comunicados}" class="small text-warning-emphasis text-decoration-none">Ver todos &rarr;</a>
+                        </div>
+                        <div class="p-3 bg-warning-subtle text-warning rounded-circle fs-3">
+                            <i class="bi bi-megaphone"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="card card-metric shadow-sm border-0 border-start border-4 border-primary p-3 bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small fw-semibold text-uppercase">Reportes de Conducta</span>
+                            <h2 class="fw-bold text-primary mb-0 mt-1" th:text="${totalReportes}">0</h2>
+                            <a th:href="@{/profesor/conducta}" class="small text-primary text-decoration-none">Ver incidencias &rarr;</a>
+                        </div>
+                        <div class="p-3 bg-primary-subtle text-primary rounded-circle fs-3">
+                            <i class="bi bi-shield-exclamation"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Tareas Recientes -->
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm border-0 rounded-4 p-4 h-100 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-journal-check text-danger me-2"></i>Tareas Recientes</h5>
+                        <a th:href="@{/profesor/tareas/nueva}" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                            <i class="bi bi-plus-lg me-1"></i> Nueva Tarea
+                        </a>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(tareas)}" class="text-center py-4 text-muted">
+                        <i class="bi bi-inbox display-4 text-secondary"></i>
+                        <p class="mt-2 mb-0">No se han registrado tareas escolares aún.</p>
+                    </div>
+
+                    <div class="list-group list-group-flush" th:unless="${#lists.isEmpty(tareas)}">
+                        <div class="list-group-item px-0 py-3 border-bottom" th:each="t : ${#lists.size(tareas) > 4 ? tareas.subList(0, 4) : tareas}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1 small" th:text="${t.materia}">Matemáticas</span>
+                                    <span class="badge bg-secondary-subtle text-secondary border rounded-pill px-2 py-1 small" th:text="${t.grado.nombre + ' (' + t.seccion.nombre + ')'}">1° Primaria</span>
+                                    <h6 class="fw-bold text-dark mt-1 mb-1" th:text="${t.titulo}">Ficha 1</h6>
+                                    <p class="text-muted small mb-1 text-truncate" style="max-width: 320px;" th:text="${t.descripcion}">Descripción...</p>
+                                    <span class="small text-muted">
+                                        <i class="bi bi-calendar-event me-1 text-danger"></i> Entrega: <strong th:text="${#temporals.format(t.fechaEntrega, 'dd/MM/yyyy')}">01/12/2026</strong>
+                                    </span>
+                                </div>
+                                <div class="d-flex flex-column align-items-end gap-1">
+                                    <a th:if="${t.tieneArchivo()}" th:href="@{/profesor/tareas/{id}/adjunto(id=${t.id})}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-2 py-0" style="font-size: 0.75rem;">
+                                        <i class="bi bi-download"></i> Adjunto
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comunicados y Tutoría -->
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm border-0 rounded-4 p-4 h-100 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-chat-left-dots-fill text-danger me-2"></i>Últimos Comunicados de Aula</h5>
+                        <a th:href="@{/profesor/comunicados/nuevo}" class="btn btn-outline-warning btn-sm rounded-pill px-3 text-dark">
+                            <i class="bi bi-plus-lg me-1"></i> Publicar
+                        </a>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(comunicados)}" class="text-center py-4 text-muted">
+                        <i class="bi bi-chat-square display-4 text-secondary"></i>
+                        <p class="mt-2 mb-0">No hay comunicados emitidos recientemente.</p>
+                    </div>
+
+                    <div class="list-group list-group-flush" th:unless="${#lists.isEmpty(comunicados)}">
+                        <div class="list-group-item px-0 py-3 border-bottom" th:each="c : ${#lists.size(comunicados) > 4 ? comunicados.subList(0, 4) : comunicados}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span th:if="${c.isUrgente()}" class="badge bg-danger text-white rounded-pill px-2 py-1 small animate-pulse">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i> URGENTE
+                                    </span>
+                                    <span th:unless="${c.isUrgente()}" class="badge bg-info-subtle text-info-emphasis border rounded-pill px-2 py-1 small">
+                                        Informativo
+                                    </span>
+                                    <h6 class="fw-bold text-dark mt-1 mb-1" th:text="${c.titulo}">Título</h6>
+                                    <p class="text-muted small mb-1 text-truncate" style="max-width: 320px;" th:text="${c.mensaje}">Mensaje...</p>
+                                    <span class="small text-muted">
+                                        <i class="bi bi-clock me-1"></i> <span th:text="${#temporals.format(c.fechaPublicacion, 'dd/MM/yyyy HH:mm')}">28/11/2026</span>
+                                    </span>
+                                </div>
+                                <div>
+                                    <a th:if="${c.tieneArchivo()}" th:href="@{/profesor/comunicados/{id}/adjunto(id=${c.id})}" target="_blank" class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-0" style="font-size: 0.75rem;">
+                                        <i class="bi bi-paperclip"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
